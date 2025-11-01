@@ -1,7 +1,10 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
+	"time"
 )
 
 func withSecurityMiddleware(c SecurityConfig, next http.Handler) http.Handler {
@@ -15,8 +18,12 @@ func withSecurityMiddleware(c SecurityConfig, next http.Handler) http.Handler {
 		*c.ContentTypeOptionsNoSniff = true
 	}
 
+	if nil == c.StrictTransportSecurityPolicy {
+		c.StrictTransportSecurityPolicy = &DefaultStrictTransportSecurityPolicy
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("strict-transport-security", "max-age=31536000")
+		w.Header().Add("strict-transport-security", c.StrictTransportSecurityPolicy.StsHeaderValue())
 
 		if *c.ContentTypeOptionsNoSniff {
 			w.Header().Add("x-content-type-options", "nosniff")
@@ -43,4 +50,17 @@ func shouldAddContentSecurityPolicyHeader(r *http.Request) bool {
 		return true
 	}
 	return false
+}
+
+func (p StrictTransportSecurityPolicy) StsHeaderValue() string {
+	directives := []string{
+		fmt.Sprintf("max-age=%d",
+			int64(p.MaxAge.Truncate(time.Second).Seconds())),
+	}
+
+	if p.IncludeSubDomains {
+		directives = append(directives, "includeSubDomains")
+	}
+
+	return strings.Join(directives, "; ")
 }
