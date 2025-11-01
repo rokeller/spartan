@@ -10,16 +10,21 @@ import (
 
 func DecodeHook() mapstructure.DecodeHookFunc {
 	return mapstructure.ComposeDecodeHookFunc(
-		SliceToFetchDirectiveValueArrayHookFunc(),
-		SliceToNoneOrSourceExpressionListArrayHookFunc(),
+		SliceToFetchDirectiveValueSliceHookFunc(),
+		SliceToNoneOrSourceExpressionListHookFunc(),
+		SliceToSandboxWithAllowedHookFunc(),
+
 		StringToFetchDirectiveValueHookFunc(),
 		StringToNoneOrSourceExpressionListHookFunc(),
+		StringToSandboxDirectiveValueHookFunc(),
+		StringToSandboxAllowHookFunc(),
+
 		MapToFetchDirectiveValueHookFunc(),
 		MapToSourceExpressionListItemHookFunc(),
 	)
 }
 
-func SliceToFetchDirectiveValueArrayHookFunc() mapstructure.DecodeHookFunc {
+func SliceToFetchDirectiveValueSliceHookFunc() mapstructure.DecodeHookFunc {
 	i := reflect.TypeOf((*FetchDirectiveValue)(nil)).Elem()
 
 	return func(f reflect.Type, t reflect.Type, data any) (any, error) {
@@ -50,7 +55,7 @@ func SliceToFetchDirectiveValueArrayHookFunc() mapstructure.DecodeHookFunc {
 	}
 }
 
-func SliceToNoneOrSourceExpressionListArrayHookFunc() mapstructure.DecodeHookFunc {
+func SliceToNoneOrSourceExpressionListHookFunc() mapstructure.DecodeHookFunc {
 	l := reflect.TypeOf((*NoneOrSourceExpressionList)(nil)).Elem()
 	i := reflect.TypeOf((*SourceExpressionListItem)(nil)).Elem()
 
@@ -79,6 +84,37 @@ func SliceToNoneOrSourceExpressionListArrayHookFunc() mapstructure.DecodeHookFun
 			}
 		}
 		return SourceExpressionList(res), nil
+	}
+}
+
+func SliceToSandboxWithAllowedHookFunc() mapstructure.DecodeHookFunc {
+	i := reflect.TypeOf((*SandboxDirectiveValue)(nil)).Elem()
+
+	return func(f reflect.Type, t reflect.Type, data any) (any, error) {
+		decodeHook := DecodeHook()
+		if f.Kind() != reflect.Slice {
+			return data, nil
+		}
+		if t.Kind() != reflect.Interface || !t.Implements(i) {
+			return data, nil
+		}
+
+		s := data.([]any)
+		res := []SandboxAllow{}
+		for _, el := range s {
+			f := reflect.ValueOf(el)
+			t := reflect.ValueOf(SandboxAllow("")) // New(i).Elem()
+			item, err := mapstructure.DecodeHookExec(decodeHook, f, t)
+			if nil != err {
+				return nil, err
+			}
+			if i, ok := item.(SandboxAllow); !ok {
+				return nil, fmt.Errorf("%v (%T) is not allowed in a sandbox.", el, el)
+			} else {
+				res = append(res, i)
+			}
+		}
+		return SandboxWithAllowed(res), nil
 	}
 }
 
@@ -147,6 +183,51 @@ func StringToNoneOrSourceExpressionListHookFunc() mapstructure.DecodeHookFunc {
 		}
 
 		return nil, fmt.Errorf("%v (%T) is not a valid directive value.", data, data)
+	}
+}
+
+func StringToSandboxDirectiveValueHookFunc() mapstructure.DecodeHookFunc {
+	i := reflect.TypeOf((*SandboxDirectiveValue)(nil)).Elem()
+	return func(f reflect.Type, t reflect.Type, data any) (any, error) {
+		if f.Kind() != reflect.String {
+			return data, nil
+		}
+		if t != i {
+			return data, nil
+		}
+
+		str := data.(string)
+		switch str {
+		case "all":
+			return SandboxAll{}, nil
+		}
+
+		return nil, fmt.Errorf("%v (%T) is not a valid sandbox value.", data, data)
+	}
+}
+func StringToSandboxAllowHookFunc() mapstructure.DecodeHookFunc {
+	i := reflect.TypeOf(SandboxAllow(""))
+	return func(f reflect.Type, t reflect.Type, data any) (any, error) {
+		if f.Kind() != reflect.String {
+			return data, nil
+		}
+		if t != i {
+			return data, nil
+		}
+
+		str := data.(string)
+		switch str {
+		case "allow-downloads", "allow-forms", "allow-modals",
+			"allow-orientation-lock", "allow-pointer-lock", "allow-popups",
+			"allow-popups-to-escape-sandbox", "allow-presentation",
+			"allow-same-origin", "allow-scripts",
+			"allow-storage-access-by-user-activation", "allow-top-navigation",
+			"allow-top-navigation-by-user-activation",
+			"allow-top-navigation-to-custom-protocols":
+			return SandboxAllow(str), nil
+		}
+
+		return nil, fmt.Errorf("%v (%T) is not a valid sandbox allow value.", data, data)
 	}
 }
 
