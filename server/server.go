@@ -13,9 +13,7 @@ import (
 )
 
 type server struct {
-	port             uint16
-	staticContentDir string
-	serverRootPath   string
+	config ServerConfig
 
 	fs      http.FileSystem
 	handler http.Handler
@@ -23,17 +21,13 @@ type server struct {
 
 func Serve(
 	ctx context.Context,
-	port uint16,
-	staticContentDir string,
-	serverRootPath string,
+	config ServerConfig,
 ) error {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 
 	s := &server{
-		port:             port,
-		staticContentDir: staticContentDir,
-		serverRootPath:   serverRootPath,
+		config: config,
 	}
 	srv, err := s.startHttpServer(wg)
 	if nil != err {
@@ -57,25 +51,28 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 	mux := http.NewServeMux()
 
 	// Normalize the server root path to start with a single slash and without a trailing slash.
-	normalizedPath := "/" + strings.TrimLeft(strings.TrimRight(s.serverRootPath, "/"), "/")
+	normalizedPath := "/" + strings.TrimLeft(strings.TrimRight(s.config.PathRoot, "/"), "/")
 	if normalizedPath == "/" {
-		s.serverRootPath = normalizedPath
+		s.config.PathRoot = normalizedPath
 	} else {
-		s.serverRootPath = normalizedPath + "/"
+		s.config.PathRoot = normalizedPath + "/"
 	}
 
-	s.fs = http.Dir(s.staticContentDir)
+	s.fs = http.Dir(s.config.StaticContentDir)
 	s.handler = http.FileServer(s.fs)
 
 	h := http.StripPrefix(
-		s.serverRootPath,
+		s.config.PathRoot,
 		http.HandlerFunc(s.handleStaticFiles))
-	p := fmt.Sprintf("GET %s", s.serverRootPath)
-	mux.Handle(p, withLoggingMiddleware(withCachingMiddleware(h)))
+	p := fmt.Sprintf("GET %s", s.config.PathRoot)
+	mux.Handle(p,
+		withLoggingMiddleware(
+			withSecurityMiddleware(s.config.Security,
+				withCachingMiddleware(s.config.Cache.DefaultPolicy, h))))
 	klog.V(1).InfoS("Registered handler", "pattern", p)
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", s.port),
+		Addr:    fmt.Sprintf(":%d", s.config.Port),
 		Handler: mux,
 
 		ReadTimeout:  15 * time.Second,
@@ -87,11 +84,11 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 		defer wg.Done()
 
 		klog.InfoS("Starting web server",
-			"port", s.port,
-			"staticContentDir", s.staticContentDir,
-			"serverRootPath", s.serverRootPath)
+			"port", s.config.Port,
+			"staticContentDir", s.config.StaticContentDir,
+			"serverPathRoot", s.config.PathRoot)
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-			klog.ErrorS(err, "Failed to start web server", "port", s.port)
+			klog.ErrorS(err, "Failed to start web server", "port", s.config.Port)
 		}
 	}()
 
@@ -111,7 +108,7 @@ func (s *server) handleStaticFiles(w http.ResponseWriter, r *http.Request) {
 	f, err := s.fs.Open(upath)
 	if nil != err {
 		klog.V(4).ErrorS(err, "Failed")
-		klog.V(5).Info("Serving index.html from staticContentDir instead", "staticContentDir", s.staticContentDir)
+		klog.V(5).Info("Serving index.html from staticContentDir instead", "staticContentDir", s.config.StaticContentDir)
 		r.URL.Path = "/"
 		// Recurse so we can leverage the same logic as for all other files.
 		s.handleStaticFiles(w, r)
