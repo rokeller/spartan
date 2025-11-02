@@ -8,8 +8,14 @@ import (
 
 var (
 	DefaultContentSecurityPolicy = ContentSecurityPolicy{
-		ReportOnly:     false,
-		DefaultSrc:     SelfDirectiveValue{},
+		ReportOnly: false,
+
+		DefaultSrc: SelfDirectiveValue{},
+		ObjectSrc:  NoneDirectiveValue{},
+
+		BaseUri: NoneDirectiveValue{},
+		Sandbox: SandboxAll{},
+
 		FormAction:     SelfDirectiveValue{},
 		FrameAncestors: SelfDirectiveValue{},
 	}
