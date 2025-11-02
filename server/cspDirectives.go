@@ -86,6 +86,23 @@ func (ReportSampleDirectiveValue) Value(ctx context.Context) string {
 }
 func (ReportSampleDirectiveValue) FetchDirectiveValueMarker() {}
 
+// NonceValue represents a 'nonce-<nonce_value>' directive value.
+// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy#nonce-nonce_value
+type NonceValue struct {
+	Placeholder string
+}
+
+func (n NonceValue) Value(ctx context.Context) string {
+	nm, ok := NonceMapFromContext(ctx)
+	if !ok {
+		klog.Error(errors.New("missing nonce context"))
+		return ""
+	}
+	rand := nm.ValueForPlaceholder(n.Placeholder)
+	return fmt.Sprintf("'nonce-%s'", rand)
+}
+func (NonceValue) FetchDirectiveValueMarker() {}
+
 // HostSourceDirectiveValue represents a <host-source> directive value.
 // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy#host-source
 type HostSourceDirectiveValue struct {

@@ -268,6 +268,18 @@ func MapToFetchDirectiveValueHookFunc() mapstructure.DecodeHookFunc {
 				return nil, err
 			}
 			return h, nil
+		} else if nonce, ok := m["nonce"]; ok {
+			// When set with just a string value, interpret that as the placeholder
+			// string in the resource.
+			if v, ok := nonce.(string); ok {
+				return NonceValue{Placeholder: v}, nil
+			}
+			// Otherwise, must be a map with the `placeholder` property set.
+			var n NonceValue
+			if err := mapstructure.Decode(nonce, &n); nil != err {
+				return nil, err
+			}
+			return n, nil
 		} else if scheme, ok := m["scheme"]; ok {
 			// When set with just a string value, interpret that as the scheme.
 			if v, ok := scheme.(string); ok {

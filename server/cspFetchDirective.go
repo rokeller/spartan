@@ -33,6 +33,7 @@ var _ FetchDirectiveValue = UnsafeHashesDirectiveValue{}
 var _ FetchDirectiveValue = InlineSpeculationRulesDirectiveValue{}
 var _ FetchDirectiveValue = StrictDynamicDirectiveValue{}
 var _ FetchDirectiveValue = ReportSampleDirectiveValue{}
+var _ FetchDirectiveValue = NonceValue{}
 var _ FetchDirectiveValue = HostSourceDirectiveValue{}
 var _ FetchDirectiveValue = SchemeSourceDirectiveValue("")
 var _ FetchDirectiveValue = SubResourceHashDirectiveValue{}
