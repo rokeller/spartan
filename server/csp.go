@@ -57,7 +57,7 @@ func (p ContentSecurityPolicy) HeaderValue(ctx context.Context) string {
 	directives = appendDirectives(directives, ctx, p.ObjectSrc, "object-src")
 	directives = appendDirectives(directives, ctx, p.ScriptSrc, "script-src")
 	directives = appendDirectives(directives, ctx, p.ScriptSrcElem, "script-src-elem")
-	directives = appendDirectives(directives, ctx, p.ScriptSrcElem, "script-src-attr")
+	directives = appendDirectives(directives, ctx, p.ScriptSrcAttr, "script-src-attr")
 	directives = appendDirectives(directives, ctx, p.StyleSrc, "style-src")
 	directives = appendDirectives(directives, ctx, p.StyleSrcElem, "style-src-elem")
 	directives = appendDirectives(directives, ctx, p.StyleSrcAttr, "style-src-attr")
