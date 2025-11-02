@@ -3,8 +3,6 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"strings"
-	"time"
 )
 
 func withSecurityMiddleware(c SecurityConfig, next http.Handler) http.Handler {
@@ -24,6 +22,10 @@ func withSecurityMiddleware(c SecurityConfig, next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("strict-transport-security", c.StrictTransportSecurityPolicy.StsHeaderValue())
+
+		if nil != c.ReportingEndpoints && c.ReportingEndpoints.HasEndpoints() {
+			w.Header().Add("reporting-endpoints", c.ReportingEndpoints.ReportingEndpointsHeaderValue())
+		}
 
 		if *c.ContentTypeOptionsNoSniff {
 			w.Header().Add("x-content-type-options", "nosniff")

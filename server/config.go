@@ -39,17 +39,6 @@ type CachePolicy struct {
 type SecurityConfig struct {
 	ContentTypeOptionsNoSniff     *bool
 	ContentSecurityPolicy         *ContentSecurityPolicy
+	ReportingEndpoints            *ReportingEndpoints
 	StrictTransportSecurityPolicy *StrictTransportSecurityPolicy
-}
-
-var (
-	DefaultStrictTransportSecurityPolicy = StrictTransportSecurityPolicy{
-		IncludeSubDomains: true,
-		MaxAge:            time.Hour * 24 * 365,
-	}
-)
-
-type StrictTransportSecurityPolicy struct {
-	IncludeSubDomains bool
-	MaxAge            time.Duration
 }

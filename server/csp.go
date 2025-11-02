@@ -29,6 +29,10 @@ type ContentSecurityPolicy struct {
 
 	// Navigation directives
 	FormAction, FrameAncestors NoneOrSourceExpressionList
+
+	// Reporting directives
+	ReportTo string
+
 }
 
 func (p ContentSecurityPolicy) HeaderValue(ctx context.Context) string {
@@ -61,6 +65,11 @@ func (p ContentSecurityPolicy) HeaderValue(ctx context.Context) string {
 	directives = appendDirectives(directives, ctx, p.FormAction, "form-action")
 	directives = appendDirectives(directives, ctx, p.FrameAncestors, "frame-ancestors")
 
+	// Reporting directives
+	if p.ReportTo != "" {
+		directives = appendDirectivesValue(directives, "report-to", p.ReportTo)
+	}
+
 	if len(directives) > 0 {
 		return strings.Join(directives, "; ")
 	}
@@ -69,15 +78,18 @@ func (p ContentSecurityPolicy) HeaderValue(ctx context.Context) string {
 
 func appendDirectives(directives []string, ctx context.Context, v DirectiveValue, name string) []string {
 	if nil != v {
-		var directive string
-		dv := v.Value(ctx)
-		if dv != "" {
-			directive = fmt.Sprintf("%s %s", name, dv)
-		} else {
-			directive = name
-		}
-		return append(directives, directive)
+		return appendDirectivesValue(directives, name, v.Value(ctx))
 	}
 
 	return directives
+}
+
+func appendDirectivesValue(directives []string, name, value string) []string {
+	var directive string
+	if value != "" {
+		directive = fmt.Sprintf("%s %s", name, value)
+	} else {
+		directive = name
+	}
+	return append(directives, directive)
 }
