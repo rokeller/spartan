@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-viper/mapstructure/v2"
 	"github.com/rokeller/spartan/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -48,9 +47,9 @@ func init() {
 		"The local port to listen on for incoming requests.")
 	viper.BindPFlag("server.port", rootCmd.Flags().Lookup("port"))
 
-	rootCmd.Flags().StringP("static-content-dir", "d", "",
+	rootCmd.PersistentFlags().StringP("static-content-dir", "d", "/content",
 		"The path to the directory holding the static content to serve.")
-	viper.BindPFlag("server.staticContentDir", rootCmd.Flags().Lookup("static-content-dir"))
+	viper.BindPFlag("server.staticContentDir", rootCmd.PersistentFlags().Lookup("static-content-dir"))
 
 	rootCmd.Flags().StringP("server-path-root", "r", "",
 		"The absolute path on the server where the static content is exposed.")
@@ -74,7 +73,7 @@ func initConfig() {
 
 		viper.AddConfigPath(cwd)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName("spartan")
+		viper.SetConfigName("config")
 	}
 
 	// Give prefix for environment variables and read them automatically.
@@ -91,18 +90,9 @@ func initConfig() {
 }
 
 func runServer(cmd *cobra.Command, args []string) error {
-	var config server.Config
-	hookOpt := viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
-		mapstructure.StringToTimeDurationHookFunc(),
-		mapstructure.StringToSliceHookFunc(","),
-		server.CspDecodeHook(),
-		server.ReferrerPolicyDecodeHook(),
-	))
-	if err := viper.Unmarshal(&config, hookOpt); err != nil {
+	if config, err := getConfig(); nil != err {
 		return err
 	} else {
-		klog.InfoS("Server configuration", "config", config)
+		return server.Serve(cmd.Context(), config.Server)
 	}
-
-	return server.Serve(cmd.Context(), config.Server)
 }
