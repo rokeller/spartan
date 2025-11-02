@@ -3,8 +3,11 @@ package server
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
+
+	"k8s.io/klog/v2"
 )
 
 type DirectiveValue interface {

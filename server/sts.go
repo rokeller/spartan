@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -16,6 +17,10 @@ var (
 type StrictTransportSecurityPolicy struct {
 	IncludeSubDomains bool
 	MaxAge            time.Duration
+}
+
+func (p StrictTransportSecurityPolicy) AddToResponse(w http.ResponseWriter) {
+	w.Header().Add("strict-transport-security", p.StsHeaderValue())
 }
 
 func (p StrictTransportSecurityPolicy) StsHeaderValue() string {
