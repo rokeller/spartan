@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 	"sync"
@@ -89,6 +90,7 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 			"serverPathRoot", s.config.PathRoot)
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 			klog.ErrorS(err, "Failed to start web server", "port", s.config.Port)
+			os.Exit(2)
 		}
 	}()
 
