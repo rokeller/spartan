@@ -23,9 +23,13 @@ func withSecurityMiddleware(c SecurityConfig, next http.Handler) http.Handler {
 	if nil == c.StrictTransportSecurityPolicy {
 		c.StrictTransportSecurityPolicy = &DefaultStrictTransportSecurityPolicy
 	}
+	if nil == c.ReferrerPolicy {
+		c.ReferrerPolicy = &DefaultReferrerPolicy
+	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c.StrictTransportSecurityPolicy.AddToResponse(w)
+		c.ReferrerPolicy.AddToResponse(w)
 		AddReportingEndpointsToResponse(c.ReportingEndpoints, w)
 
 		if *c.ContentTypeOptionsNoSniff {

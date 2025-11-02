@@ -95,7 +95,8 @@ func runServer(cmd *cobra.Command, args []string) error {
 	hookOpt := viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
 		mapstructure.StringToTimeDurationHookFunc(),
 		mapstructure.StringToSliceHookFunc(","),
-		server.DecodeHook(),
+		server.CspDecodeHook(),
+		server.ReferrerPolicyDecodeHook(),
 	))
 	if err := viper.Unmarshal(&config, hookOpt); err != nil {
 		return err

@@ -8,7 +8,7 @@ import (
 	"github.com/go-viper/mapstructure/v2"
 )
 
-func DecodeHook() mapstructure.DecodeHookFunc {
+func CspDecodeHook() mapstructure.DecodeHookFunc {
 	return mapstructure.ComposeDecodeHookFunc(
 		SliceToFetchDirectiveValueSliceHookFunc(),
 		SliceToNoneOrSourceExpressionListHookFunc(),
@@ -28,7 +28,7 @@ func SliceToFetchDirectiveValueSliceHookFunc() mapstructure.DecodeHookFunc {
 	i := reflect.TypeOf((*FetchDirectiveValue)(nil)).Elem()
 
 	return func(f reflect.Type, t reflect.Type, data any) (any, error) {
-		decodeHook := DecodeHook()
+		decodeHook := CspDecodeHook()
 		if f.Kind() != reflect.Slice {
 			return data, nil
 		}
@@ -60,7 +60,7 @@ func SliceToNoneOrSourceExpressionListHookFunc() mapstructure.DecodeHookFunc {
 	i := reflect.TypeOf((*SourceExpressionListItem)(nil)).Elem()
 
 	return func(f reflect.Type, t reflect.Type, data any) (any, error) {
-		decodeHook := DecodeHook()
+		decodeHook := CspDecodeHook()
 		if f.Kind() != reflect.Slice {
 			return data, nil
 		}
@@ -91,7 +91,7 @@ func SliceToSandboxWithAllowedHookFunc() mapstructure.DecodeHookFunc {
 	i := reflect.TypeOf((*SandboxDirectiveValue)(nil)).Elem()
 
 	return func(f reflect.Type, t reflect.Type, data any) (any, error) {
-		decodeHook := DecodeHook()
+		decodeHook := CspDecodeHook()
 		if f.Kind() != reflect.Slice {
 			return data, nil
 		}
@@ -205,6 +205,7 @@ func StringToSandboxDirectiveValueHookFunc() mapstructure.DecodeHookFunc {
 		return nil, fmt.Errorf("%v (%T) is not a valid sandbox value.", data, data)
 	}
 }
+
 func StringToSandboxAllowHookFunc() mapstructure.DecodeHookFunc {
 	i := reflect.TypeOf(SandboxAllow(""))
 	return func(f reflect.Type, t reflect.Type, data any) (any, error) {
