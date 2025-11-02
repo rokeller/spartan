@@ -15,12 +15,15 @@ var (
 )
 
 type StrictTransportSecurityPolicy struct {
+	Disabled          bool
 	IncludeSubDomains bool
 	MaxAge            time.Duration
 }
 
 func (p StrictTransportSecurityPolicy) AddToResponse(w http.ResponseWriter) {
-	w.Header().Add("strict-transport-security", p.StsHeaderValue())
+	if !p.Disabled {
+		w.Header().Add("strict-transport-security", p.StsHeaderValue())
+	}
 }
 
 func (p StrictTransportSecurityPolicy) StsHeaderValue() string {
