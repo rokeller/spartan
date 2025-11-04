@@ -39,6 +39,7 @@ type CachePolicy struct {
 type SecurityConfig struct {
 	ContentTypeOptionsNoSniff     *bool
 	ContentSecurityPolicy         *ContentSecurityPolicy
+	PermissionsPolicy             *PermissionsPolicy
 	ReferrerPolicy                *ReferrerPolicy
 	ReportingEndpoints            *ReportingEndpoints
 	StrictTransportSecurityPolicy *StrictTransportSecurityPolicy
