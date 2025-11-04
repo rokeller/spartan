@@ -45,35 +45,35 @@ func (p ContentSecurityPolicy) HeaderValue(ctx context.Context) string {
 	directives := []string{}
 
 	// Fetch directives
-	directives = appendDirectives(directives, ctx, p.ChildSrc, "child-src")
-	directives = appendDirectives(directives, ctx, p.ConnectSrc, "connect-src")
-	directives = appendDirectives(directives, ctx, p.DefaultSrc, "default-src")
-	directives = appendDirectives(directives, ctx, p.FencedFrameSrc, "fenced-frame-src")
-	directives = appendDirectives(directives, ctx, p.FontSrc, "font-src")
-	directives = appendDirectives(directives, ctx, p.FrameSrc, "frame-src")
-	directives = appendDirectives(directives, ctx, p.ImgSrc, "img-src")
-	directives = appendDirectives(directives, ctx, p.ManifestSrc, "manifest-src")
-	directives = appendDirectives(directives, ctx, p.MediaSrc, "media-src")
-	directives = appendDirectives(directives, ctx, p.ObjectSrc, "object-src")
-	directives = appendDirectives(directives, ctx, p.ScriptSrc, "script-src")
-	directives = appendDirectives(directives, ctx, p.ScriptSrcElem, "script-src-elem")
-	directives = appendDirectives(directives, ctx, p.ScriptSrcAttr, "script-src-attr")
-	directives = appendDirectives(directives, ctx, p.StyleSrc, "style-src")
-	directives = appendDirectives(directives, ctx, p.StyleSrcElem, "style-src-elem")
-	directives = appendDirectives(directives, ctx, p.StyleSrcAttr, "style-src-attr")
-	directives = appendDirectives(directives, ctx, p.WorkerSrc, "worker-src-src")
+	directives = appendCspDirectives(directives, ctx, p.ChildSrc, "child-src")
+	directives = appendCspDirectives(directives, ctx, p.ConnectSrc, "connect-src")
+	directives = appendCspDirectives(directives, ctx, p.DefaultSrc, "default-src")
+	directives = appendCspDirectives(directives, ctx, p.FencedFrameSrc, "fenced-frame-src")
+	directives = appendCspDirectives(directives, ctx, p.FontSrc, "font-src")
+	directives = appendCspDirectives(directives, ctx, p.FrameSrc, "frame-src")
+	directives = appendCspDirectives(directives, ctx, p.ImgSrc, "img-src")
+	directives = appendCspDirectives(directives, ctx, p.ManifestSrc, "manifest-src")
+	directives = appendCspDirectives(directives, ctx, p.MediaSrc, "media-src")
+	directives = appendCspDirectives(directives, ctx, p.ObjectSrc, "object-src")
+	directives = appendCspDirectives(directives, ctx, p.ScriptSrc, "script-src")
+	directives = appendCspDirectives(directives, ctx, p.ScriptSrcElem, "script-src-elem")
+	directives = appendCspDirectives(directives, ctx, p.ScriptSrcAttr, "script-src-attr")
+	directives = appendCspDirectives(directives, ctx, p.StyleSrc, "style-src")
+	directives = appendCspDirectives(directives, ctx, p.StyleSrcElem, "style-src-elem")
+	directives = appendCspDirectives(directives, ctx, p.StyleSrcAttr, "style-src-attr")
+	directives = appendCspDirectives(directives, ctx, p.WorkerSrc, "worker-src-src")
 
 	// Document directives
-	directives = appendDirectives(directives, ctx, p.BaseUri, "base-uri")
-	directives = appendDirectives(directives, ctx, p.Sandbox, "sandbox")
+	directives = appendCspDirectives(directives, ctx, p.BaseUri, "base-uri")
+	directives = appendCspDirectives(directives, ctx, p.Sandbox, "sandbox")
 
 	// Navigation directives
-	directives = appendDirectives(directives, ctx, p.FormAction, "form-action")
-	directives = appendDirectives(directives, ctx, p.FrameAncestors, "frame-ancestors")
+	directives = appendCspDirectives(directives, ctx, p.FormAction, "form-action")
+	directives = appendCspDirectives(directives, ctx, p.FrameAncestors, "frame-ancestors")
 
 	// Reporting directives
 	if p.ReportTo != "" {
-		directives = appendDirectivesValue(directives, "report-to", p.ReportTo)
+		directives = appendCspDirectivesValue(directives, "report-to", p.ReportTo)
 	}
 
 	if len(directives) > 0 {
@@ -82,15 +82,15 @@ func (p ContentSecurityPolicy) HeaderValue(ctx context.Context) string {
 	return ""
 }
 
-func appendDirectives(directives []string, ctx context.Context, v DirectiveValue, name string) []string {
+func appendCspDirectives(directives []string, ctx context.Context, v DirectiveValue, name string) []string {
 	if nil != v {
-		return appendDirectivesValue(directives, name, v.Value(ctx))
+		return appendCspDirectivesValue(directives, name, v.Value(ctx))
 	}
 
 	return directives
 }
 
-func appendDirectivesValue(directives []string, name, value string) []string {
+func appendCspDirectivesValue(directives []string, name, value string) []string {
 	var directive string
 	if value != "" {
 		directive = fmt.Sprintf("%s %s", name, value)

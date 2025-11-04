@@ -103,7 +103,7 @@ func SliceToSandboxWithAllowedHookFunc() mapstructure.DecodeHookFunc {
 		res := []SandboxAllow{}
 		for _, el := range s {
 			f := reflect.ValueOf(el)
-			t := reflect.ValueOf(SandboxAllow("")) // New(i).Elem()
+			t := reflect.ValueOf(SandboxAllow(""))
 			item, err := mapstructure.DecodeHookExec(decodeHook, f, t)
 			if nil != err {
 				return nil, err

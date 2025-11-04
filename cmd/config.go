@@ -13,6 +13,7 @@ func getConfig() (*server.Config, error) {
 		mapstructure.StringToTimeDurationHookFunc(),
 		mapstructure.StringToSliceHookFunc(","),
 		server.CspDecodeHook(),
+		server.PermissionPolicyDecodeHook(),
 		server.ReferrerPolicyDecodeHook(),
 	))
 	if err := viper.Unmarshal(&config, hookOpt); err != nil {

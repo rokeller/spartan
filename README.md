@@ -17,7 +17,7 @@ Flags:
   -h, --help                        help for spartan
 ```
 
-For example, the follogin command starts the `spartan` web server for static
+For example, the following command starts the `spartan` web server for static
 content from the directory `/path/to/web` and exposing it on the sub-path `/web/`
 through the HTTP interface:
 
@@ -68,6 +68,8 @@ server:
     referrerPolicy: strict-origin-when-cross-origin
     contentSecurityPolicy:
       # The content security policy to use, see below.
+    permissionsPolicy:
+      # The permissions policy to use, see below.
     reportingEndpoints:
       # The reporting endpoints to use for CSP reporting, see below.
     strictTransportSecurityPolicy:
@@ -292,6 +294,105 @@ server:
       formAction: self
       frameAncestors: self
 ```
+
+This produces the following content security policy header in responses:
+`Content-Security-Policy: default-src 'self'; object-src 'none'; base-uri 'none'; sandbox; form-action 'self'; frame-ancestors 'self'`
+
+### Permissions policy
+
+Here's how the permissions policy can be configured. The block must be under
+`server.security` in the YAML file.
+
+```yaml
+permissionsPolicy:
+  accelerometer: permissions
+  ambientLightSensor: permissions
+  ariaNotify: permissions
+  attributionReporting: permissions
+  autoplay: permissions
+  bluetooth: permissions
+  browsingTopics: permissions
+  camera: permissions
+  capturedSurfaceControl: permissions
+  computePressure: permissions
+  crossOriginIsolated: permissions
+  deferredRetch: permissions
+  deferredRetchMinimal: permissions
+  displayCapture: permissions
+  encryptedMedia: permissions
+  fullscreen: permissions
+  gamepad: permissions
+  geolocation: permissions
+  gyroscope: permissions
+  hid: permissions
+  identityCredentialGet: permissions
+  idleDetection: permissions
+  languageDetector: permissions
+  localFonts: permissions
+  magnetometer: permissions
+  microphone: permissions
+  midi: permissions
+  onDeviceSpeechRecognition: permissions
+  otpCredentials: permissions
+  payment: permissions
+  pictureInPicture: permissions
+  publickeyCredentialsCreate: permissions
+  publickeyCredentialsGet: permissions
+  screenWakeLock: permissions
+  serial: permissions
+  speakerSelection: permissions
+  storageAccess: permissions
+  translator: permissions
+  summarizer: permissions
+  usb: permissions
+  webShare: permissions
+  windowManagement: permissions
+  xrSpatialTracking: permissions
+```
+
+Where `permissions` can be one of `"*"`, `all`, or `wildcard` to grant the
+permission indiscriminately. If you set it to `none` or `()`, the permission
+is not granted at all.
+
+You can grant a permission to more specific scopes by configuring a list. For
+example, to grant the `geolocation` permission for several scopes:
+
+```yaml
+permissionsPolicy:
+  geolocation:
+    - self
+    - src
+    - https://my.origin.host.com
+    - https://*.other.host.com
+```
+
+If you want to grant only a single scope for any permission, you can also
+configure it directly without defining it as a list. For example, to allow `self`
+for the `camera`:
+
+```yaml
+permissionsPolicy:
+  camera: self
+```
+
+If the permissions policy is not configured, `spartan` defaults to using a
+policy where each feature is not allowed, like shown
+following configuration, expressed in YAML.
+
+```yaml
+server:
+  security:
+    permissionsPolicy:
+      accelerometer: none
+      ambientLightSensor: none
+      ariaNotify: none
+      # ...
+```
+
+This effectively implies that a permissions policy header like the following is
+added to responses:
+
+`Permissions-Policy: accelerometer=(); ambient-light-sensor=(); aria-notify=(); ...`
 
 ### Strict transport security policy
 

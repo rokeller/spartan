@@ -14,27 +14,30 @@ func withSecurityMiddleware(c SecurityConfig, next http.Handler) http.Handler {
 	if nil == csp {
 		csp = &DefaultContentSecurityPolicy
 	}
+	pp := c.PermissionsPolicy
+	if nil == pp {
+		pp = &DefaultPermissionsPolicy
+	}
 
 	if nil == c.ContentTypeOptionsNoSniff {
 		c.ContentTypeOptionsNoSniff = new(bool)
 		*c.ContentTypeOptionsNoSniff = true
 	}
-
-	if nil == c.StrictTransportSecurityPolicy {
-		c.StrictTransportSecurityPolicy = &DefaultStrictTransportSecurityPolicy
-	}
 	if nil == c.ReferrerPolicy {
 		c.ReferrerPolicy = &DefaultReferrerPolicy
 	}
+	if nil == c.StrictTransportSecurityPolicy {
+		c.StrictTransportSecurityPolicy = &DefaultStrictTransportSecurityPolicy
+	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		c.StrictTransportSecurityPolicy.AddToResponse(w)
-		c.ReferrerPolicy.AddToResponse(w)
-		AddReportingEndpointsToResponse(c.ReportingEndpoints, w)
-
 		if *c.ContentTypeOptionsNoSniff {
 			w.Header().Add("x-content-type-options", "nosniff")
 		}
+		pp.AddToResponse(w)
+		c.ReferrerPolicy.AddToResponse(w)
+		AddReportingEndpointsToResponse(c.ReportingEndpoints, w)
+		c.StrictTransportSecurityPolicy.AddToResponse(w)
 
 		var niw *nonceInjectingResponseWriter
 		if shouldAddContentSecurityPolicyHeader(r) {
