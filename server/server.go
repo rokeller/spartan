@@ -2,10 +2,12 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"path"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -50,6 +52,7 @@ func Serve(
 
 func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 	mux := http.NewServeMux()
+	s.addHealthEndpoints(mux)
 
 	// Normalize the server root path to start with a single slash and without a trailing slash.
 	normalizedPath := "/" + strings.TrimLeft(strings.TrimRight(s.config.PathRoot, "/"), "/")
@@ -120,4 +123,40 @@ func (s *server) handleStaticFiles(w http.ResponseWriter, r *http.Request) {
 
 	// Let the configured handler serve the request.
 	s.handler.ServeHTTP(w, r)
+}
+
+func (s *server) addHealthEndpoints(mux *http.ServeMux) {
+	mux.HandleFunc("GET /_spartan/live", s.healthEndpointLive)
+	mux.HandleFunc("GET /_spartan/runtime", s.healthEndpointRuntime)
+}
+
+func (s *server) healthEndpointLive(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("content-type", "application/json")
+	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(map[string]any{
+		"status": "ok",
+	})
+}
+
+func (s *server) healthEndpointRuntime(w http.ResponseWriter, r *http.Request) {
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+
+	stats := map[string]any{
+		"goroutines": runtime.NumGoroutine(),
+		"memory": map[string]uint64{
+			"totalAlloc": memStats.TotalAlloc,
+			"sys":        memStats.Sys,
+			"heapAlloc":  memStats.HeapAlloc,
+			"heapSys":    memStats.HeapSys,
+			"stackInuse": memStats.StackInuse,
+			"stackSys":   memStats.StackSys,
+		},
+		"gc": map[string]uint32{
+			"numGC": memStats.NumGC,
+		},
+	}
+
+	w.Header().Set("content-type", "application/json")
+	json.NewEncoder(w).Encode(stats)
 }
