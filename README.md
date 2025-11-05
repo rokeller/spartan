@@ -296,6 +296,7 @@ server:
 ```
 
 This produces the following content security policy header in responses:
+
 `Content-Security-Policy: default-src 'self'; object-src 'none'; base-uri 'none'; sandbox; form-action 'self'; frame-ancestors 'self'`
 
 ### Permissions policy
@@ -392,7 +393,7 @@ server:
 This effectively implies that a permissions policy header like the following is
 added to responses:
 
-`Permissions-Policy: accelerometer=(); ambient-light-sensor=(); aria-notify=(); ...`
+`Permissions-Policy: accelerometer=(), ambient-light-sensor=(), aria-notify=(), ...`
 
 ### Strict transport security policy
 
