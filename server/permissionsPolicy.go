@@ -162,7 +162,7 @@ func (p *PermissionsPolicy) HeaderValue() string {
 	directives = appendPermissionDirectives(directives, p.XrSpatialTracking, "xr-spatial-tracking")
 
 	if len(directives) > 0 {
-		return strings.Join(directives, "; ")
+		return strings.Join(directives, ", ")
 	}
 	return ""
 }
