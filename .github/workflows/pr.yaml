@@ -21,6 +21,10 @@ jobs:
       - name: Build spartan
         run: go build
 
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Build container image
         run: |
           docker image build -t spartan .
