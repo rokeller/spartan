@@ -7,7 +7,6 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v5
 
@@ -18,5 +17,13 @@ jobs:
           cache-dependency-path: |
             go.sum
 
-      - name: Build Server
+      - name: Build spartan
         run: go build
+
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build container image
+        run: |
+          docker image build -t spartan .
