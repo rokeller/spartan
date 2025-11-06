@@ -18,5 +18,9 @@ jobs:
           cache-dependency-path: |
             go.sum
 
-      - name: Build Server
+      - name: Build spartan
         run: go build
+
+      - name: Build container image
+        run: |
+          docker image build -t spartan .
