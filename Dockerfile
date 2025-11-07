@@ -5,8 +5,9 @@ COPY go.* ./
 RUN go mod download
 
 COPY . .
+ARG SPARTAN_TAGS=""
 # Create an optimized statically linked binary so we can create an image from scratch below.
-RUN CGO_ENABLED=0 go build -ldflags '-s -w'
+RUN CGO_ENABLED=0 go build -tags "$SPARTAN_TAGS" -ldflags '-s -w'
 
 FROM scratch
 
@@ -15,4 +16,4 @@ USER 1000
 ENTRYPOINT [ "/srv/spartan" ]
 EXPOSE 8080/tcp
 
-COPY --from=build /src/spartan /srv
+COPY --link --from=build /src/spartan /srv
