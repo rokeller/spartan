@@ -16,4 +16,4 @@ USER 1000
 ENTRYPOINT [ "/srv/spartan" ]
 EXPOSE 8080/tcp
 
-COPY --link --from=build /src/spartan /srv
+COPY --link --from=build /src/spartan /srv/
