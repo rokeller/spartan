@@ -32,7 +32,7 @@ jobs:
       - name: Build container image
         run: |
           echo 'Building minimal image ...'
-          docker image build -build-arg SPARTAN_TAGS=minimal -t spartan .
+          docker image build --build-arg SPARTAN_TAGS=minimal -t spartan .
 
           echo 'Building image with all ...'
           docker image build -t spartan:tools .
