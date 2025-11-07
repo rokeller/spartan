@@ -47,9 +47,20 @@ jobs:
 
       - uses: docker/build-push-action@v6
         with:
+          build-args: |
+            SPARTAN_TAGS=minimal
           context: .
           push: true
           tags: |
             ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR }}
             ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR }}
             ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR_PATCH }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR }}-tools
+            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR }}-tools
+            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR_PATCH }}-tools

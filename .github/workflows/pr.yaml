@@ -18,7 +18,12 @@ jobs:
             go.sum
 
       - name: Build spartan
-        run: go build
+        run: |
+          echo 'Building minimal ...'
+          go build -tags minimal
+
+          echo 'Building all ...'
+          go build
 
   build-image:
     runs-on: ubuntu-latest
@@ -26,4 +31,8 @@ jobs:
       - uses: actions/checkout@v5
       - name: Build container image
         run: |
-          docker image build -t spartan .
+          echo 'Building minimal image ...'
+          docker image build --build-arg SPARTAN_TAGS=minimal -t spartan .
+
+          echo 'Building image with all ...'
+          docker image build -t spartan:tools .

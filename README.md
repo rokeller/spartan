@@ -1,6 +1,7 @@
 # Spartan
 
-> A simple and secure web server for SPA or similar apps with static assets.
+> A simple and secure web server for SPA (single page application) or similar
+> apps with static assets.
 
 ## Usage
 
@@ -29,7 +30,7 @@ That is, when a browser requests for example _http://localhost:8080/web_, the
 browser will automatically render the file _/path/to/web/index.html_ served by
 `spartan`.
 
-### Container usage
+### Container images
 
 When using the official spartan container images, `spartan` is located at
 `/srv/spartan` and it expects the `config.yaml` file in the same directory, i.e.,
@@ -38,12 +39,77 @@ configuration file in any location of your liking and instruct `spartan` to load
 it from there. For example, with _docker_:
 
 ```bash
-docker container run --rm -it spartan --config=/path/to/my-config.yaml
+docker container run --rm -it ghcr.io/rokeller/spartan:0 --config=/path/to/my-config.yaml
 ```
 
 Please note that of course you should **not** put the configuration file in the
 same folder (or a subfolder) as the static content, since otherwise your
-configuration file will be exposed by `spartan` itself.
+configuration file can be exposed by `spartan` itself.
+
+You can run with the default configuration, but unless you add some content, you
+won't be able see anything in a browser. The easiest way to try this is to
+create a file called `index.html` in the current working directory and run
+something like the following:
+
+```bash
+docker container run --rm -it \
+  --mount type=bind,source=$PWD/index.html,target=/content/index.html,readonly \
+  -p 8080:8080 \
+  ghcr.io/rokeller/spartan:0 -v2
+```
+
+This will serve whatever you put into your `index.html` for whatever path you're
+requesting on [localhost:8080](http://localhost:8080), because `spartan` treats
+your `index.html` as the fallback resource for any paths that have no matching
+resource in the container - the behavior desired for SPAs.
+
+The additional `-v2` switch turns on logging of verbosity levels up to 2, thus
+including logging for requests.
+
+#### Image flavors
+
+We publish two different flavors of the container image: _minimal_ (with _no_
+image tag suffix, i.e., the default for each version) and _tools_ (with the
+`-tools` suffix after the version). In production, you'll typically want to run
+the _minimal_ flavor, as it has the minimal footprint. The _tools_ flavor offers
+additional commands on the `spartan` executable that can be helpful to inspect
+content served by `spartan` or headers added to responses. Those commands are
+discussed in the sections below. You can also find out more by running for
+example:
+
+```bash
+docker container run --rm -it ghcr.io/rokeller/spartan:0-tools -h
+```
+
+#### Command `spartan ls`
+
+The `ls` subcommand of `spartan` lists content in the configured static content
+directory of the image, which by default is `/content`. For example, if you
+create your own image with the `spartan:version-tools` image as the base image,
+you can inspect all content files by running
+
+```bash
+docker container run --rm -it my-image-with-spartan ls
+```
+
+#### Command `spartan headers`
+
+The `headers` subcommand of `spartan` prints the values that `spartan` adds for
+various headers in responses, as configured in the YAML configuration. This can
+be useful to debug these headers without the need to run the server. For example,
+if you quickly want to validate your `config.yaml` and see the various response
+headers it produces, you can run
+
+```bash
+docker container run --rm -it \
+    -v /path/to/my/config.yaml:/srv/config.yaml:ro \
+    ghcr.io/rokeller/spartan:0-tools headers
+```
+
+The output then shows the response headers exactly as they would be presented
+to a browser with the specific configuration. This can be helpful also in
+combination with other tools like for example
+[CSP Evaluator](https://csp-evaluator.withgoogle.com/) by Google.
 
 ## Configuration
 

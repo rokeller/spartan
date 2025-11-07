@@ -44,3 +44,41 @@ type SecurityConfig struct {
 	ReportingEndpoints            *ReportingEndpoints
 	StrictTransportSecurityPolicy *StrictTransportSecurityPolicy
 }
+
+func (c *SecurityConfig) GetContentSecurityPolicy() *ContentSecurityPolicy {
+	csp := c.ContentSecurityPolicy
+	if nil == csp {
+		return &DefaultContentSecurityPolicy
+	}
+	return csp
+}
+
+func (c *SecurityConfig) GetContentTypeOptionsNoSniff() bool {
+	if nil == c.ContentTypeOptionsNoSniff {
+		c.ContentTypeOptionsNoSniff = new(bool)
+		*c.ContentTypeOptionsNoSniff = true
+	}
+	return *c.ContentTypeOptionsNoSniff
+}
+
+func (c *SecurityConfig) GetPermissionsPolicy() *PermissionsPolicy {
+	pp := c.PermissionsPolicy
+	if nil == pp {
+		return &DefaultPermissionsPolicy
+	}
+	return pp
+}
+
+func (c *SecurityConfig) GetReferrerPolicy() *ReferrerPolicy {
+	if nil == c.ReferrerPolicy {
+		return &DefaultReferrerPolicy
+	}
+	return c.ReferrerPolicy
+}
+
+func (c *SecurityConfig) GetStrictTransportSecurityPolicy() *StrictTransportSecurityPolicy {
+	if nil == c.StrictTransportSecurityPolicy {
+		return &DefaultStrictTransportSecurityPolicy
+	}
+	return c.StrictTransportSecurityPolicy
+}

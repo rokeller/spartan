@@ -10,34 +10,20 @@ import (
 )
 
 func withSecurityMiddleware(c SecurityConfig, next http.Handler) http.Handler {
-	csp := c.ContentSecurityPolicy
-	if nil == csp {
-		csp = &DefaultContentSecurityPolicy
-	}
-	pp := c.PermissionsPolicy
-	if nil == pp {
-		pp = &DefaultPermissionsPolicy
-	}
-
-	if nil == c.ContentTypeOptionsNoSniff {
-		c.ContentTypeOptionsNoSniff = new(bool)
-		*c.ContentTypeOptionsNoSniff = true
-	}
-	if nil == c.ReferrerPolicy {
-		c.ReferrerPolicy = &DefaultReferrerPolicy
-	}
-	if nil == c.StrictTransportSecurityPolicy {
-		c.StrictTransportSecurityPolicy = &DefaultStrictTransportSecurityPolicy
-	}
+	csp := c.GetContentSecurityPolicy()
+	pp := c.GetPermissionsPolicy()
+	contentTypeOptionsNoSniff := c.GetContentTypeOptionsNoSniff()
+	rp := c.GetReferrerPolicy()
+	sts := c.GetStrictTransportSecurityPolicy()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if *c.ContentTypeOptionsNoSniff {
+		if contentTypeOptionsNoSniff {
 			w.Header().Add("x-content-type-options", "nosniff")
 		}
 		pp.AddToResponse(w)
-		c.ReferrerPolicy.AddToResponse(w)
+		rp.AddToResponse(w)
 		AddReportingEndpointsToResponse(c.ReportingEndpoints, w)
-		c.StrictTransportSecurityPolicy.AddToResponse(w)
+		sts.AddToResponse(w)
 
 		var niw *nonceInjectingResponseWriter
 		if shouldAddContentSecurityPolicyHeader(r) {
