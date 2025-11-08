@@ -7,6 +7,10 @@ import (
 	"k8s.io/klog/v2"
 )
 
+var (
+	vpr = viper.New()
+)
+
 func getConfig() (*server.Config, error) {
 	var config server.Config
 	hookOpt := viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
@@ -16,7 +20,7 @@ func getConfig() (*server.Config, error) {
 		server.PermissionPolicyDecodeHook(),
 		server.ReferrerPolicyDecodeHook(),
 	))
-	if err := viper.Unmarshal(&config, hookOpt); err != nil {
+	if err := vpr.Unmarshal(&config, hookOpt); err != nil {
 		return nil, err
 	} else {
 		klog.InfoS("Server configuration", "config", config)
