@@ -7,7 +7,6 @@ import (
 
 	"github.com/rokeller/spartan/server"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"k8s.io/klog/v2"
 )
 
@@ -45,24 +44,24 @@ func init() {
 
 	rootCmd.Flags().Uint16P("port", "p", 8080,
 		"The local port to listen on for incoming requests.")
-	viper.BindPFlag("server.port", rootCmd.Flags().Lookup("port"))
+	vpr.BindPFlag("server.port", rootCmd.Flags().Lookup("port"))
 
 	rootCmd.PersistentFlags().StringP("static-content-dir", "d", "/content",
 		"The path to the directory holding the static content to serve.")
-	viper.BindPFlag("server.staticContentDir", rootCmd.PersistentFlags().Lookup("static-content-dir"))
+	vpr.BindPFlag("server.staticContentDir", rootCmd.PersistentFlags().Lookup("static-content-dir"))
 
 	rootCmd.Flags().StringP("server-path-root", "r", "",
 		"The absolute path on the server where the static content is exposed.")
-	viper.BindPFlag("server.pathRoot", rootCmd.Flags().Lookup("server-path-root"))
+	vpr.BindPFlag("server.pathRoot", rootCmd.Flags().Lookup("server-path-root"))
 
-	viper.BindPFlags(rootCmd.Flags())
+	vpr.BindPFlags(rootCmd.Flags())
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
+		vpr.SetConfigFile(cfgFile)
 	} else {
 		// Find current working directory.
 		cwd, err := os.Getwd()
@@ -71,21 +70,21 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		viper.AddConfigPath(cwd)
-		viper.SetConfigType("yaml")
-		viper.SetConfigName("config")
+		vpr.AddConfigPath(cwd)
+		vpr.SetConfigType("yaml")
+		vpr.SetConfigName("config")
 	}
 
 	// Give prefix for environment variables and read them automatically.
-	viper.SetEnvPrefix("SPARTAN_")
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "__"))
-	viper.AutomaticEnv() // read in environment variables that match
+	vpr.SetEnvPrefix("SPARTAN_")
+	vpr.SetEnvKeyReplacer(strings.NewReplacer(".", "__"))
+	vpr.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); nil == err {
-		klog.V(1).InfoS("Loaded config file", "file", viper.ConfigFileUsed())
+	if err := vpr.ReadInConfig(); nil == err {
+		klog.V(1).InfoS("Loaded config file", "file", vpr.ConfigFileUsed())
 	} else {
-		klog.ErrorS(err, "Failed to load config file", "file", viper.ConfigFileUsed())
+		klog.ErrorS(err, "Failed to load config file", "file", vpr.ConfigFileUsed())
 	}
 }
 

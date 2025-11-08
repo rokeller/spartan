@@ -12,6 +12,7 @@ Flags:
   -p, --port uint16                 The local port to listen on for incoming requests. (default 8080)
   -r, --server-path-root string     The absolute path on the server where the static content is exposed.
       --config string               The config file to use.
+      --log_dir string              If non-empty, write log files in this directory (no effect when -logtostderr=true)
       --logtostderr                 log to standard error instead of files (default true)
   -d, --static-content-dir string   The path to the directory holding the static content to serve. (default "/content")
   -v, --v Level                     number for the log level verbosity
