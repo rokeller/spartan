@@ -17,6 +17,7 @@ func main() {
 	defer klog.Flush()
 	pflag.CommandLine.AddGoFlag(flag.CommandLine.Lookup("v"))
 	pflag.CommandLine.AddGoFlag(flag.CommandLine.Lookup("logtostderr"))
+	pflag.CommandLine.AddGoFlag(flag.CommandLine.Lookup("log_dir"))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
