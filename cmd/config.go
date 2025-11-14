@@ -23,7 +23,7 @@ func getConfig() (*server.Config, error) {
 	if err := vpr.Unmarshal(&config, hookOpt); err != nil {
 		return nil, err
 	} else {
-		klog.InfoS("Server configuration", "config", config)
+		klog.InfoS("Loaded configuration", "config", config)
 	}
 	return &config, nil
 }

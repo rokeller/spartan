@@ -10,6 +10,12 @@ import (
 	"k8s.io/klog/v2"
 )
 
+const (
+	EnvPrefix            = "SPARTAN"
+	EnvScopeSeparator    = "__"
+	ConfigScopeSeparator = "."
+)
+
 var (
 	version string
 
@@ -54,12 +60,19 @@ func init() {
 	rootCmd.Flags().StringP("server-path-root", "r", "",
 		"The absolute path on the server where the static content is exposed.")
 	vpr.BindPFlag("server.pathRoot", rootCmd.Flags().Lookup("server-path-root"))
-
-	vpr.BindPFlags(rootCmd.Flags())
 }
 
-// initConfig reads in config file and ENV variables if set.
+// initConfig reads in config file and ENV variables, if set.
 func initConfig() {
+	// Give prefix for environment variables and read them automatically.
+	vpr.SetEnvPrefix(EnvPrefix)
+	vpr.SetEnvKeyReplacer(strings.NewReplacer(ConfigScopeSeparator, EnvScopeSeparator))
+	vpr.AutomaticEnv()
+	// Bind environment variables matching the prefix because viper doesn't do
+	// this by itself (see https://github.com/spf13/viper/issues/761).
+	bindEnv()
+	vpr.SetConfigType("yaml")
+
 	if cfgFile != "" {
 		// Use config file from the flag.
 		vpr.SetConfigFile(cfgFile)
@@ -72,14 +85,8 @@ func initConfig() {
 		}
 
 		vpr.AddConfigPath(cwd)
-		vpr.SetConfigType("yaml")
 		vpr.SetConfigName("config")
 	}
-
-	// Give prefix for environment variables and read them automatically.
-	vpr.SetEnvPrefix("SPARTAN_")
-	vpr.SetEnvKeyReplacer(strings.NewReplacer(".", "__"))
-	vpr.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := vpr.ReadInConfig(); nil == err {
@@ -94,5 +101,21 @@ func runServer(cmd *cobra.Command, args []string) error {
 		return err
 	} else {
 		return server.Serve(cmd.Context(), config.Server)
+	}
+}
+
+func bindEnv() {
+	replacer := strings.NewReplacer(
+		EnvPrefix+"_" /* added automatically by viper */, "",
+		EnvScopeSeparator, ConfigScopeSeparator,
+	)
+	for _, e := range os.Environ() {
+		k, _, ok := strings.Cut(e, "=")
+		if !ok || !strings.HasPrefix(k, EnvPrefix+"_") {
+			continue
+		}
+
+		k = replacer.Replace(k)
+		vpr.BindEnv(k)
 	}
 }
