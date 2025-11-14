@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"k8s.io/klog/v2"
 )
 
 // lsCmd represents the ls command
@@ -19,6 +18,7 @@ var lsCmd = &cobra.Command{
 
 This is a helper command that can be useful to inspect what's going on in the
 container when debugging issues with static content.`,
+	Args: cobra.NoArgs,
 	RunE: runLs,
 }
 
@@ -27,7 +27,6 @@ func init() {
 }
 
 func runLs(cmd *cobra.Command, args []string) error {
-	klog.SetOutput(cmd.OutOrStderr())
 	if config, err := getConfig(); nil != err {
 		return err
 	} else {

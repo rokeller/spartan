@@ -22,6 +22,7 @@ var rootCmd = &cobra.Command{
 	Short: "A simple secure web server for SPA or similar apps with static assets.",
 	Long: `A simple and secure-by-default web server for SPA or similar web app hosting
 of static assets.`,
+	Args: cobra.NoArgs,
 
 	Version: version,
 	RunE:    runServer,
