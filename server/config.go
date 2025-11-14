@@ -10,6 +10,7 @@ type ServerConfig struct {
 	Port             uint16
 	StaticContentDir string
 	PathRoot         string
+	FallbackToIndex  *bool
 
 	Cache    Cache
 	Security SecurityConfig

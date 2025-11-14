@@ -110,16 +110,19 @@ func (s *server) handleStaticFiles(w http.ResponseWriter, r *http.Request) {
 	r.URL.Path = upath
 	klog.V(5).InfoS("Client requested", "path", upath)
 
-	f, err := s.fs.Open(upath)
-	if nil != err {
-		klog.V(4).ErrorS(err, "Failed")
-		klog.V(5).Info("Serving index.html from staticContentDir instead", "staticContentDir", s.config.StaticContentDir)
-		r.URL.Path = "/"
-		// Recurse so we can leverage the same logic as for all other files.
-		s.handleStaticFiles(w, r)
-		return
+	// Fallback to the index.html file unless explicitly configured otherwise.
+	if nil == s.config.FallbackToIndex || *s.config.FallbackToIndex {
+		f, err := s.fs.Open(upath)
+		if nil != err {
+			klog.V(4).ErrorS(err, "Failed")
+			klog.V(5).Info("Serving index.html from staticContentDir instead", "staticContentDir", s.config.StaticContentDir)
+			r.URL.Path = "/"
+			// Recurse so we can leverage the same logic as for all other files.
+			s.handleStaticFiles(w, r)
+			return
+		}
+		defer f.Close()
 	}
-	defer f.Close()
 
 	// Let the configured handler serve the request.
 	s.handler.ServeHTTP(w, r)
