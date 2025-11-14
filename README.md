@@ -62,7 +62,8 @@ docker container run --rm -it \
 This will serve whatever you put into your `index.html` for whatever path you're
 requesting on [localhost:8080](http://localhost:8080), because `spartan` treats
 your `index.html` as the fallback resource for any paths that have no matching
-resource in the container - the behavior desired for SPAs.
+resource in the container - the behavior desired for some SPAs. To disable this
+fallback, set the `server.fallbackToIndex` property to `false`.
 
 The additional `-v2` switch turns on logging of verbosity levels up to 2, thus
 including logging for requests.
@@ -125,6 +126,7 @@ server:
   port: 8080
   staticContentDir: /content
   pathRoot: /my-spa/
+  fallbackToIndex: true # Defaults to true when omitted, set to false to disable
 
   cache:
     defaultPolicy:
