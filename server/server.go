@@ -56,11 +56,9 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 
 	// Normalize the server root path to start with a single slash and without a trailing slash.
 	normalizedPath := "/" + strings.TrimLeft(strings.TrimRight(s.config.PathRoot, "/"), "/")
-	// needRedirect := false
 	if normalizedPath == "/" {
 		s.config.PathRoot = normalizedPath
 	} else {
-		// needRedirect = true
 		s.config.PathRoot = normalizedPath + "/"
 	}
 
@@ -76,18 +74,6 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 			withSecurityMiddleware(s.config.Security,
 				withCachingMiddleware(s.config.Cache.DefaultPolicy, h))))
 	klog.V(1).InfoS("Registered handler", "pattern", p)
-
-	// if needRedirect {
-	// 	rh := http.RedirectHandler(
-	// 		s.serverPathRoot, http.StatusMovedPermanently)
-	// 	mux.Handle(fmt.Sprintf("GET %s", normalizedPath), rh)
-	// 	// mux.Handle(fmt.Sprintf("HEAD %s", normalizedPath), rh)
-	// 	// r.PathPrefix(normalizedPath).Handler(
-	// 	// 	// TODO: make status code configurable
-	// 	// 	http.RedirectHandler(
-	// 	// 		s.serverPathRoot, http.StatusMovedPermanently),
-	// 	// ).Methods(http.MethodGet, http.MethodHead)
-	// }
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", s.config.Port),
