@@ -113,6 +113,15 @@ to a browser with the specific configuration. This can be helpful also in
 combination with other tools like for example
 [CSP Evaluator](https://csp-evaluator.withgoogle.com/) by Google.
 
+#### Health endpoints
+
+The `spartan` server offers two health endpoints.
+
+* `GET /_spartan/live` serves as a liveness check. It always responds with HTTP
+  200 and the JSON body `{"status":"ok"}` when the server is running.
+* `GET /_spartan/runtime` serves some runtime information about the server, such
+  as heap and stack usage, number of goroutines and garbage collections.
+
 ## Configuration
 
 By default `spartan` is loading additional configuration from a file called
