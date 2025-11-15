@@ -16,6 +16,7 @@ func getConfig() (*server.Config, error) {
 	hookOpt := viper.DecodeHook(mapstructure.ComposeDecodeHookFunc(
 		mapstructure.StringToTimeDurationHookFunc(),
 		mapstructure.StringToSliceHookFunc(","),
+		server.CachingDecodeHook(),
 		server.CspDecodeHook(),
 		server.PermissionPolicyDecodeHook(),
 		server.ReferrerPolicyDecodeHook(),

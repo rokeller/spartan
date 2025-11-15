@@ -17,7 +17,8 @@ type ServerConfig struct {
 }
 
 type Cache struct {
-	DefaultPolicy CachePolicy
+	DefaultPolicy *CachePolicy
+	RouteMatches  []RouteMatchingCachePolicy
 }
 
 type CachePolicy struct {
@@ -35,6 +36,11 @@ type CachePolicy struct {
 	SharedMaxAge         *time.Duration
 	StaleIfError         *time.Duration
 	StaleWhileRevalidate *time.Duration
+}
+
+type RouteMatchingCachePolicy struct {
+	Match  RouteMatcher
+	Policy CachePolicy `mapstructure:",squash"`
 }
 
 type SecurityConfig struct {
