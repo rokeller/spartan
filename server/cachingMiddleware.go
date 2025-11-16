@@ -5,12 +5,47 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"k8s.io/klog/v2"
 )
 
-func withCachingMiddleware(c CachePolicy, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		v := c.CacheControlHeaderValue()
+type routeMatchingCacheControlHeaderValue struct {
+	RouteMatcher
+	headerValue string
+}
+type routeMatching struct {
+	routes       []routeMatchingCacheControlHeaderValue
+	defaultValue string
+}
+
+func withCachingMiddleware(c Cache, next http.Handler) http.Handler {
+	defaultPolicyHeaderValue := ""
+	if nil != c.DefaultPolicy {
+		v := c.DefaultPolicy.CacheControlHeaderValue()
 		if v != "" {
+			defaultPolicyHeaderValue = v
+		}
+	}
+
+	routes := routeMatching{
+		routes:       make([]routeMatchingCacheControlHeaderValue, len(c.Routes)),
+		defaultValue: defaultPolicyHeaderValue,
+	}
+	pos := 0
+	for i, m := range c.Routes {
+		if nil == m.Match {
+			klog.ErrorS(nil, "Misconfigured match for cache route match will be ignored; check configuration", "routeMatchIndex", i)
+			continue
+		}
+		routes.routes[pos] = routeMatchingCacheControlHeaderValue{
+			c.Routes[i].Match,
+			c.Routes[i].Policy.CacheControlHeaderValue(),
+		}
+		pos++
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if v := routes.determinePolicyHeaderValue(r); v != "" {
 			w.Header().Add("cache-control", v)
 		}
 
@@ -18,50 +53,69 @@ func withCachingMiddleware(c CachePolicy, next http.Handler) http.Handler {
 	})
 }
 
-func (c CachePolicy) CacheControlHeaderValue() string {
+func (m routeMatching) determinePolicyHeaderValue(r *http.Request) string {
+	res := m.defaultValue
+
+	// Find out which matching route has the longest match and set the resulting
+	// header value accordingly.
+	if len(m.routes) > 0 {
+		longest := -1
+		for _, matcher := range m.routes {
+			if l, ok := matcher.Match(r); !ok {
+				continue
+			} else if l > longest {
+				res = matcher.headerValue
+				longest = l
+			}
+		}
+	}
+	return res
+}
+
+func (p *CachePolicy) CacheControlHeaderValue() string {
 	directives := []string{}
-	if nil != c.MaxAge && time.Duration(c.MaxAge.Seconds()) > 0 {
+	if nil != p.MaxAge && time.Duration(p.MaxAge.Seconds()) > 0 {
 		directives = append(directives, fmt.Sprintf("max-age=%d",
-			int64(c.MaxAge.Truncate(time.Second).Seconds())))
+			int64(p.MaxAge.Truncate(time.Second).Seconds())))
 	}
-	if nil != c.SharedMaxAge && time.Duration(c.SharedMaxAge.Seconds()) > 0 {
+	if nil != p.SharedMaxAge && time.Duration(p.SharedMaxAge.Seconds()) > 0 {
 		directives = append(directives, fmt.Sprintf("s-maxage=%d",
-			int64(c.SharedMaxAge.Truncate(time.Second).Seconds())))
+			int64(p.SharedMaxAge.Truncate(time.Second).Seconds())))
 	}
-	if nil != c.StaleIfError && time.Duration(c.StaleIfError.Seconds()) > 0 {
+	if nil != p.StaleIfError && time.Duration(p.StaleIfError.Seconds()) > 0 {
 		directives = append(directives, fmt.Sprintf("stale-if-error=%d",
-			int64(c.StaleIfError.Truncate(time.Second).Seconds())))
+			int64(p.StaleIfError.Truncate(time.Second).Seconds())))
 	}
-	if nil != c.StaleWhileRevalidate && time.Duration(c.StaleWhileRevalidate.Seconds()) > 0 {
+	if nil != p.StaleWhileRevalidate && time.Duration(p.StaleWhileRevalidate.Seconds()) > 0 {
 		directives = append(directives, fmt.Sprintf("stale-while-revalidate=%d",
-			int64(c.StaleWhileRevalidate.Truncate(time.Second).Seconds())))
+			int64(p.StaleWhileRevalidate.Truncate(time.Second).Seconds())))
 	}
 
-	if c.Immutable {
+	if p.Immutable {
 		directives = append(directives, "immutable")
 	}
-	if c.MustRevalidate {
+	if p.MustRevalidate {
 		directives = append(directives, "must-revalidate")
 	}
-	if c.MustUnderstand {
+	if p.MustUnderstand {
 		directives = append(directives, "must-understand")
 	}
-	if c.NoCache {
+	if p.NoCache {
 		directives = append(directives, "no-cache")
 	}
-	if c.NoStore {
+	if p.NoStore {
 		directives = append(directives, "no-store")
 	}
-	if c.NoTransform {
+	if p.NoTransform {
 		directives = append(directives, "no-transform")
 	}
-	if c.Private {
+	if p.Private {
 		directives = append(directives, "private")
 	}
-	if c.ProxyRevalidate {
+	if p.ProxyRevalidate {
 		directives = append(directives, "proxy-revalidate")
 	}
-	if c.Public {
+	if p.Public {
 		directives = append(directives, "public")
 	}
 

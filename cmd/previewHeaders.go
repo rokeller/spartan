@@ -35,7 +35,7 @@ func runPreviewHeaders(cmd *cobra.Command, args []string) error {
 
 func printHeaders(cmd *cobra.Command, config *server.Config) {
 	w := cmd.OutOrStdout()
-	printCachePolicy(cmd, &config.Server.Cache.DefaultPolicy)
+	printCachePolicies(cmd, config.Server.Cache)
 	fmt.Fprintln(w)
 	printContentSecurityPolicy(cmd,
 		config.Server.Security.GetContentSecurityPolicy(),
@@ -51,14 +51,33 @@ func printHeaders(cmd *cobra.Command, config *server.Config) {
 	fmt.Fprintln(w)
 }
 
-func printCachePolicy(cmd *cobra.Command, p *server.CachePolicy) {
+func printCachePolicies(cmd *cobra.Command, c server.Cache) {
 	w := cmd.OutOrStdout()
 	printTitle(w, "Caching headers")
-	v := p.CacheControlHeaderValue()
-	if v != "" {
-		fmt.Fprintf(w, "Cache-Control: %s\n", v)
-	} else {
-		printWarning(w, "Cache-Control header not configured.")
+
+	defaultPolicy := c.DefaultPolicy
+	if nil != defaultPolicy {
+		printNote(w, "Default cache policy")
+		v := defaultPolicy.CacheControlHeaderValue()
+		if v != "" {
+			fmt.Fprintf(w, "Cache-Control: %s\n", v)
+		} else {
+			printWarning(w, "Default cache policy is empty, no Cache-Control header generated/added.")
+		}
+	}
+
+	for i, m := range c.Routes {
+		if nil == m.Match {
+			printWarning(w, fmt.Sprintf("Cache policy route #%d has unknown/invalid match. Check configuration.", i))
+			continue
+		}
+		printNote(w, fmt.Sprintf("Cache policy #%d for %s", i, m.Match.RouteString()))
+		v := m.Policy.CacheControlHeaderValue()
+		if v != "" {
+			fmt.Fprintf(w, "Cache-Control: %s\n", v)
+		} else {
+			printWarning(w, "Cache policy is empty, no Cache-Control header generated/added.")
+		}
 	}
 }
 

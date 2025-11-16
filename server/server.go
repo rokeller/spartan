@@ -65,14 +65,13 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 	s.fs = http.Dir(s.config.StaticContentDir)
 	s.handler = http.FileServer(s.fs)
 
-	h := http.StripPrefix(
-		s.config.PathRoot,
-		http.HandlerFunc(s.handleStaticFiles))
+	h := http.HandlerFunc(s.handleStaticFiles)
 	p := fmt.Sprintf("GET %s", s.config.PathRoot)
 	mux.Handle(p,
 		withLoggingMiddleware(
-			withSecurityMiddleware(s.config.Security,
-				withCachingMiddleware(s.config.Cache.DefaultPolicy, h))))
+			http.StripPrefix(s.config.PathRoot,
+				withSecurityMiddleware(s.config.Security,
+					withCachingMiddleware(s.config.Cache, h)))))
 	klog.V(1).InfoS("Registered handler", "pattern", p)
 
 	srv := &http.Server{

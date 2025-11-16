@@ -140,6 +140,8 @@ server:
   cache:
     defaultPolicy:
       # The cache policy to use, see below.
+    routes:
+      # Allows to configure different cache policies for different endpoints. See below
 
   security:
     contentTypeOptionsNoSniff: true
@@ -208,7 +210,49 @@ server:
 ```
 
 ... will produce a `cache-control` header like
+
 `Cache-Control: max-age=604800, s-maxage=604800, stale-if-error=86400, stale-while-revalidate=86400, must-revalidate, public`
+
+#### Route-matched cache policies
+
+`spartan` also allows you configure different cache policies for different
+resources. For example, some SPA bundlers generate assets (scripts, stylesheets,
+fonts, images, etc.) using hash-based file names, implying that an asset's file
+name never changes unless the asset input changes. This allows for virtually
+infinite caching of such assets.
+
+Currently, you can configure only path prefix-based cache policies, aside from
+the above-mentioned default cache policy. For example, to configure a different
+cache policy for everything in the `assets/` folder of your static content,
+you could do something like the following:
+
+```yaml
+server:
+  cache:
+    defaultPolicy:
+      # Put your default cache policy here
+    routes:
+      - match:
+          pathPrefix: assets/ # It's important not to start the path with a slash
+        immutable: true
+        public: true
+        maxAge: 31536000s # 1 year
+        sharedMaxAge: 31536000s # 1 year
+        staleWhileRevalidate: 31536000s # 1 year
+        staleIfError: 31536000s # 1 year
+```
+
+The result here is that all resources served by `spartan` with the path prefix
+`assets/` (relative to the configured path root that is always normalized to
+have a trailing slash, e.g. `/my-spa/`) will get a `cache-control` header like
+this:
+
+`Cache-Control: max-age=31536000, s-maxage=31536000, stale-if-error=31536000, stale-while-revalidate=31536000, immutable, public`
+
+Routes are matched in the order in which they're configured. The first strategy
+that results in the longest match is selected and its cache policy is applied.
+For example, if a route matches `assets/index-` it will be preferred over a
+route that matches just `assets/` because the former match is longer.
 
 ### Content security policy
 
