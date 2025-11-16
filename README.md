@@ -249,6 +249,11 @@ this:
 
 `Cache-Control: max-age=31536000, s-maxage=31536000, stale-if-error=31536000, stale-while-revalidate=31536000, immutable, public`
 
+Routes are matched in the order in which they're configured. The first strategy
+that results in the longest match is selected and its cache policy is applied.
+For example, if a route matches `assets/index-` it will be preferred over a
+route that matches just `assets/` because the former match is longer.
+
 ### Content security policy
 
 Here's how the content security policy can be configured. The block must be
