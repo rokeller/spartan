@@ -18,7 +18,7 @@ type ServerConfig struct {
 
 type Cache struct {
 	DefaultPolicy *CachePolicy
-	RouteMatches  []RouteMatchingCachePolicy
+	Routes        []RouteMatchingCachePolicy
 }
 
 type CachePolicy struct {

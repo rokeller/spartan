@@ -66,7 +66,7 @@ func printCachePolicies(cmd *cobra.Command, c server.Cache) {
 		}
 	}
 
-	for i, m := range c.RouteMatches {
+	for i, m := range c.Routes {
 		if nil == m.Match {
 			printWarning(w, fmt.Sprintf("Cache policy route #%d has unknown/invalid match. Check configuration.", i))
 			continue
