@@ -7,10 +7,6 @@ import (
 	"time"
 )
 
-func toPtr[T any](x T) *T {
-	return &x
-}
-
 func Test_withCachingMiddleware(t *testing.T) {
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
