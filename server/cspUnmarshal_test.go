@@ -54,7 +54,7 @@ ContentSecurityPolicy:
   frameAncestors: none
 `
 
-	var tempMap map[string]interface{}
+	var tempMap map[string]any
 	err := yaml.Unmarshal([]byte(y), &tempMap)
 	if err != nil {
 		panic(err)
