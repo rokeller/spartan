@@ -25,6 +25,9 @@ jobs:
           echo 'Building all ...'
           go build
 
+      - name: Test Server
+        run: go test ./...
+
   build-image:
     runs-on: ubuntu-latest
     steps:

@@ -1,1 +1,4 @@
 spartan
+
+coverage.*
+!.github/workflows/coverage.yaml
