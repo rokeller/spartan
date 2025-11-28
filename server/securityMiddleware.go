@@ -22,7 +22,7 @@ func withSecurityMiddleware(c SecurityConfig, next http.Handler) http.Handler {
 		}
 		pp.AddToResponse(w)
 		rp.AddToResponse(w)
-		AddReportingEndpointsToResponse(c.ReportingEndpoints, w)
+		c.ReportingEndpoints.AddToResponse(w)
 		sts.AddToResponse(w)
 
 		var niw *nonceInjectingResponseWriter
