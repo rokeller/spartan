@@ -22,7 +22,7 @@ func withSecurityMiddleware(c SecurityConfig, next http.Handler) http.Handler {
 		}
 		pp.AddToResponse(w)
 		rp.AddToResponse(w)
-		AddReportingEndpointsToResponse(c.ReportingEndpoints, w)
+		c.ReportingEndpoints.AddToResponse(w)
 		sts.AddToResponse(w)
 
 		var niw *nonceInjectingResponseWriter
@@ -39,6 +39,7 @@ func withSecurityMiddleware(c SecurityConfig, next http.Handler) http.Handler {
 			if len(nm) > 0 {
 				niw = &nonceInjectingResponseWriter{
 					ResponseWriter: w,
+					statusCode:     200,
 					buf:            &bytes.Buffer{},
 					nonces:         nm,
 				}

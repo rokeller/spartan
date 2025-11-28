@@ -71,7 +71,11 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 		withLoggingMiddleware(
 			http.StripPrefix(s.config.PathRoot,
 				withSecurityMiddleware(s.config.Security,
-					withCachingMiddleware(s.config.Cache, h)))))
+					withCachingMiddleware(s.config.Cache, h),
+				),
+			),
+		),
+	)
 	klog.V(1).InfoS("Registered handler", "pattern", p)
 
 	srv := &http.Server{

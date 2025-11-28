@@ -286,7 +286,7 @@ func MapToFetchDirectiveValueHookFunc() mapstructure.DecodeHookFunc {
 			if v, ok := scheme.(string); ok {
 				return SchemeSourceDirectiveValue(v), nil
 			}
-			return data, nil
+			return nil, fmt.Errorf("%v (%T) is not allowed in a scheme directive value", scheme, scheme)
 		}
 
 		return nil, fmt.Errorf("%v (%T) is not a valid fetch directive value.", data, data)
@@ -321,7 +321,7 @@ func MapToSourceExpressionListItemHookFunc() mapstructure.DecodeHookFunc {
 			if v, ok := scheme.(string); ok {
 				return SchemeSourceDirectiveValue(v), nil
 			}
-			return data, nil
+			return nil, fmt.Errorf("%v (%T) is not allowed in a scheme directive value", scheme, scheme)
 		}
 
 		return nil, fmt.Errorf("%v (%T) is not a valid source expression list item value.", data, data)

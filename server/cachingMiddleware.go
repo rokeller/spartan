@@ -28,20 +28,18 @@ func withCachingMiddleware(c Cache, next http.Handler) http.Handler {
 	}
 
 	routes := routeMatching{
-		routes:       make([]routeMatchingCacheControlHeaderValue, len(c.Routes)),
+		routes:       make([]routeMatchingCacheControlHeaderValue, 0, len(c.Routes)),
 		defaultValue: defaultPolicyHeaderValue,
 	}
-	pos := 0
 	for i, m := range c.Routes {
 		if nil == m.Match {
 			klog.ErrorS(nil, "Misconfigured match for cache route match will be ignored; check configuration", "routeMatchIndex", i)
 			continue
 		}
-		routes.routes[pos] = routeMatchingCacheControlHeaderValue{
+		routes.routes = append(routes.routes, routeMatchingCacheControlHeaderValue{
 			c.Routes[i].Match,
 			c.Routes[i].Policy.CacheControlHeaderValue(),
-		}
-		pos++
+		})
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

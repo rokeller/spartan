@@ -13,13 +13,7 @@ type ReportingEndpoint struct {
 
 type ReportingEndpoints []ReportingEndpoint
 
-func AddReportingEndpointsToResponse(e *ReportingEndpoints, w http.ResponseWriter) {
-	if nil != e {
-		e.AddToResponse(w)
-	}
-}
-
-func (e ReportingEndpoints) AddToResponse(w http.ResponseWriter) {
+func (e *ReportingEndpoints) AddToResponse(w http.ResponseWriter) {
 	if nil == e {
 		return
 	}
