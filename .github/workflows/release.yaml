@@ -57,7 +57,7 @@ jobs:
             ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR }}-tools
             ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR_PATCH }}-tools
           labels: |
-            org.opencontainers.image.version=$GITHUB_REF_NAME
+            org.opencontainers.image.version=${{ github.ref_name }}
             org.opencontainers.image.description=spartan web server with tools
 
       - uses: docker/build-push-action@v6
@@ -71,5 +71,5 @@ jobs:
             ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR }}
             ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR_PATCH }}
           labels: |
-            org.opencontainers.image.version=$GITHUB_REF_NAME
+            org.opencontainers.image.version=${{ github.ref_name }}
             org.opencontainers.image.description=spartan web server (minimal)
