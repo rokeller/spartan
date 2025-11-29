@@ -16,8 +16,8 @@ var lsCmd = &cobra.Command{
 	Short: "List files in static content directory",
 	Long: `Lists files recurively in the directory configured for static content.
 
-This is a helper command that can be useful to inspect what's going on in the
-container when debugging issues with static content.`,
+This is a helper command that can be useful to inspect what files are present in
+the container when debugging issues with static content.`,
 	Args: cobra.NoArgs,
 	RunE: runLs,
 }
@@ -30,8 +30,7 @@ func runLs(cmd *cobra.Command, args []string) error {
 	if config, err := getConfig(); nil != err {
 		return err
 	} else {
-		listRecursive(cmd, config.Server.StaticContentDir)
-		return nil
+		return listRecursive(cmd, config.Server.StaticContentDir)
 	}
 }
 
