@@ -11,6 +11,9 @@ RUN CGO_ENABLED=0 go build -tags "$SPARTAN_TAGS" -ldflags '-s -w'
 
 FROM scratch
 
+LABEL org.opencontainers.image.source=https://github.com/rokeller/spartan
+LABEL org.opencontainers.image.licenses=Apache-2.0
+
 WORKDIR /srv
 USER 1000
 ENTRYPOINT [ "/srv/spartan" ]
