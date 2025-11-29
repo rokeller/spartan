@@ -552,3 +552,7 @@ are `h` (hours), `m` (minutes), `s` (seconds).
 For example, to set a _duration_ property to one year, set its value to `8760h`,
 representing 365 * 24 hours. To set a _duration_ to 1 hour 2 minutes and 3
 seconds, use the value `1h2m3s`.
+
+## Attribution
+
+The `spartan` logo was generated with Microsoft Copilot.
