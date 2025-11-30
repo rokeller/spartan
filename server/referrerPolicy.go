@@ -14,7 +14,6 @@ type ReferrerPolicy struct {
 
 func (p ReferrerPolicy) AddToResponse(w http.ResponseWriter) {
 	w.Header().Add("referrer-policy", p.Value.Value())
-
 }
 
 type ReferrerPolicyValue interface {
