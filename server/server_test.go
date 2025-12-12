@@ -4,6 +4,10 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path"
+	"path/filepath"
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -99,6 +103,144 @@ func Test_server_startHttpServer(t *testing.T) {
 				t.Errorf("server.Shutdown failed: %v", err)
 			}
 			wg.Wait()
+		})
+	}
+}
+
+func Test_server_handleStaticFiles(t *testing.T) {
+	repoRootDir := func() string {
+		_, filename, _, ok := runtime.Caller(0)
+		if !ok {
+			panic("failed to get caller information")
+		}
+		dirname := path.Join(filepath.Dir(filename), "..")
+		rootPath, err := filepath.Abs(dirname)
+		if nil != err {
+			panic(err)
+		}
+		return rootPath
+	}()
+
+	getRepoFileContent := func(elem ...string) string {
+		p := path.Join(append([]string{repoRootDir}, elem...)...)
+		data, err := os.ReadFile(p)
+		if nil != err {
+			t.Fatalf("failed to read repo file %q: %v", p, err)
+		}
+		return string(data)
+	}
+
+	tests := []struct {
+		name       string
+		url        string
+		config     ServerConfig
+		wantStatus int
+		wantBody   string
+	}{
+		{
+			name: "FallbackToIndex=nil/Request root",
+			url:  "/",
+			config: ServerConfig{
+				StaticContentDir: path.Join(repoRootDir, "example/content"),
+			},
+			wantStatus: 200,
+			wantBody:   getRepoFileContent("example/content/index.html"),
+		},
+		{
+			name: "FallbackToIndex=nil/Request styles.css",
+			url:  "/static/styles.css",
+			config: ServerConfig{
+				StaticContentDir: path.Join(repoRootDir, "example/content"),
+			},
+			wantStatus: 200,
+			wantBody:   getRepoFileContent("example/content/static/styles.css"),
+		},
+		{
+			name: "FallbackToIndex=nil/Request missing resource",
+			url:  "/foo",
+			config: ServerConfig{
+				StaticContentDir: path.Join(repoRootDir, "example/content"),
+			},
+			wantStatus: 200,
+			wantBody:   getRepoFileContent("example/content/index.html"),
+		},
+		{
+			name: "FallbackToIndex=True/Request root",
+			url:  "/",
+			config: ServerConfig{
+				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				FallbackToIndex:  toPtr(true),
+			},
+			wantStatus: 200,
+			wantBody:   getRepoFileContent("example/content/index.html"),
+		},
+		{
+			name: "FallbackToIndex=True/Request styles.css",
+			url:  "/static/styles.css",
+			config: ServerConfig{
+				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				FallbackToIndex:  toPtr(true),
+			},
+			wantStatus: 200,
+			wantBody:   getRepoFileContent("example/content/static/styles.css"),
+		},
+		{
+			name: "FallbackToIndex=True/Request missing resource",
+			url:  "/foo",
+			config: ServerConfig{
+				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				FallbackToIndex:  toPtr(true),
+			},
+			wantStatus: 200,
+			wantBody:   getRepoFileContent("example/content/index.html"),
+		},
+		{
+			name: "FallbackToIndex=False/Request root",
+			url:  "/",
+			config: ServerConfig{
+				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				FallbackToIndex:  toPtr(false),
+			},
+			wantStatus: 200,
+			wantBody:   getRepoFileContent("example/content/index.html"),
+		},
+		{
+			name: "FallbackToIndex=False/Request styles.css",
+			url:  "/static/styles.css",
+			config: ServerConfig{
+				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				FallbackToIndex:  toPtr(false),
+			},
+			wantStatus: 200,
+			wantBody:   getRepoFileContent("example/content/static/styles.css"),
+		},
+		{
+			name: "FallbackToIndex=False/Request missing resource",
+			url:  "/foo",
+			config: ServerConfig{
+				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				FallbackToIndex:  toPtr(false),
+			},
+			wantStatus: 404,
+			wantBody:   "404 page not found\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &server{config: tt.config}
+			s.fs = http.Dir(s.config.StaticContentDir)
+			s.handler = http.FileServer(s.fs)
+
+			req := httptest.NewRequest("GET", tt.url, nil)
+			w := httptest.NewRecorder()
+			s.handleStaticFiles(w, req)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("server responded with status %d, want %d", w.Result().StatusCode, tt.wantStatus)
+			}
+
+			if w.Body.String() != tt.wantBody {
+				t.Errorf("server responded with body %q, want %q", w.Body.String(), tt.wantBody)
+			}
 		})
 	}
 }

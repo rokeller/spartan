@@ -104,17 +104,17 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 }
 
 func (s *server) handleStaticFiles(w http.ResponseWriter, r *http.Request) {
-	upath := path.Clean(r.URL.Path)
-	if upath == "." {
-		upath = "/"
-	} else if !strings.HasPrefix(upath, "/") {
-		upath = "/" + upath
-	}
-	r.URL.Path = upath
-	klog.V(5).InfoS("Client requested", "path", upath)
-
-	// Fallback to the index.html file unless explicitly configured otherwise.
 	if nil == s.config.FallbackToIndex || *s.config.FallbackToIndex {
+		upath := path.Clean(r.URL.Path)
+		if upath == "." {
+			upath = "/"
+		} else if !strings.HasPrefix(upath, "/") {
+			upath = "/" + upath
+		}
+		r.URL.Path = upath
+		klog.V(5).InfoS("Client requested", "path", upath)
+
+		// Fallback to the index.html file.
 		f, err := s.fs.Open(upath)
 		if nil != err {
 			klog.V(4).ErrorS(err, "Failed")
