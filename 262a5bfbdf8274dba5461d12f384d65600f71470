@@ -1,0 +1,1 @@
+{"go-coverage-action-fmt":1,"coverage_pct":95.8005249343832,"pkg_stats":{"github.com/rokeller/spartan":[100],"github.com/rokeller/spartan/cmd":[91.80327868852459],"github.com/rokeller/spartan/server":[96.48]},"skipped_count":0}
