@@ -62,10 +62,11 @@ docker container run --rm -it \
 ```
 
 This will serve whatever you put into your `index.html` for whatever path you're
-requesting on [localhost:8080](http://localhost:8080), because `spartan` treats
-your `index.html` as the fallback resource for any paths that have no matching
-resource in the container - the behavior desired for some SPAs. To disable this
-fallback, set the `server.fallbackToIndex` property to `false`.
+requesting on [localhost:8080](http://localhost:8080), because `spartan` by
+default treats your `index.html` as the fallback resource for any paths that
+have no matching resource in the container - the behavior desired for some SPAs.
+To disable this fallback, set the `server.notFoundBehavior.fallbackToIndex`
+property to `false` and define a different behavior.
 
 The additional `-v2` switch turns on logging of verbosity levels up to 2, thus
 including logging for requests.
@@ -137,7 +138,23 @@ server:
   port: 8080
   staticContentDir: /content
   pathRoot: /my-spa/
-  fallbackToIndex: true # Defaults to true when omitted, set to false to disable
+  notFoundBehavior:
+    fallbackToIndex: true # Defaults to true when omitted, set to false to
+                          # define a custom behavior for resources that are not
+                          # found.
+    statusCode: 404 # The status code to respond with for resources that are not
+                    # found. This defaults to 200 when fallbackToIndex is omitted
+                    # or set to true.
+    bodyPath: /my-spa/404.html # The path to the file defining the response body
+                               # for responses of resources that are not found.
+                               # this is ignored when fallbackToIndex is omitted
+                               # or set to true, in which case the index.html from
+                               # the staticContentDir above is served. Otherwise,
+                               # when this is omitted, a default plain text
+                               # response is generated when resources are not found.
+    contentType: text/html; charset=utf-8 # The content type header to set for
+                                          # responses on resources that are not
+                                          # found.
 
   cache:
     defaultPolicy:
