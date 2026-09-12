@@ -49,6 +49,7 @@ var (
 		WebShare:                   AllowNonePermission{},
 		WindowManagement:           AllowNonePermission{},
 		XrSpatialTracking:          AllowNonePermission{},
+		// Deprecated:
 		// AttributionReporting:       AllowNonePermission{}, // deprecated per https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy#browser_compatibility
 		// BrowsingTopics:             AllowNonePermission{}, // deprecated per https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy#browser_compatibility
 	}
@@ -68,10 +69,8 @@ type PermissionsPolicy struct {
 	Accelerometer              PermissionAllowValue
 	AmbientLightSensor         PermissionAllowValue
 	AriaNotify                 PermissionAllowValue
-	AttributionReporting       PermissionAllowValue
 	Autoplay                   PermissionAllowValue
 	Bluetooth                  PermissionAllowValue
-	BrowsingTopics             PermissionAllowValue
 	Camera                     PermissionAllowValue
 	CapturedSurfaceControl     PermissionAllowValue
 	ComputePressure            PermissionAllowValue
@@ -108,6 +107,9 @@ type PermissionsPolicy struct {
 	WebShare                   PermissionAllowValue
 	WindowManagement           PermissionAllowValue
 	XrSpatialTracking          PermissionAllowValue
+	// Deprecated:
+	// AttributionReporting       PermissionAllowValue
+	// BrowsingTopics             PermissionAllowValue
 }
 
 func (p *PermissionsPolicy) AddToResponse(w http.ResponseWriter) {
@@ -120,10 +122,8 @@ func (p *PermissionsPolicy) HeaderValue() string {
 	directives = appendPermissionDirectives(directives, p.Accelerometer, "accelerometer")
 	directives = appendPermissionDirectives(directives, p.AmbientLightSensor, "ambient-light-sensor")
 	directives = appendPermissionDirectives(directives, p.AriaNotify, "aria-notify")
-	directives = appendPermissionDirectives(directives, p.AttributionReporting, "attribution-reporting")
 	directives = appendPermissionDirectives(directives, p.Autoplay, "autoplay")
 	directives = appendPermissionDirectives(directives, p.Bluetooth, "bluetooth")
-	directives = appendPermissionDirectives(directives, p.BrowsingTopics, "browsing-topics")
 	directives = appendPermissionDirectives(directives, p.Camera, "camera")
 	directives = appendPermissionDirectives(directives, p.CapturedSurfaceControl, "captured-surface-control")
 	directives = appendPermissionDirectives(directives, p.ComputePressure, "compute-pressure")
@@ -160,6 +160,10 @@ func (p *PermissionsPolicy) HeaderValue() string {
 	directives = appendPermissionDirectives(directives, p.WebShare, "web-share")
 	directives = appendPermissionDirectives(directives, p.WindowManagement, "window-management")
 	directives = appendPermissionDirectives(directives, p.XrSpatialTracking, "xr-spatial-tracking")
+
+	// Deprecated:
+	// directives = appendPermissionDirectives(directives, p.AttributionReporting, "attribution-reporting")
+	// directives = appendPermissionDirectives(directives, p.BrowsingTopics, "browsing-topics")
 
 	if len(directives) > 0 {
 		return strings.Join(directives, ", ")
