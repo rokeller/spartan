@@ -11,10 +11,8 @@ var (
 		Accelerometer:              AllowNonePermission{},
 		AmbientLightSensor:         AllowNonePermission{},
 		AriaNotify:                 AllowNonePermission{},
-		AttributionReporting:       AllowNonePermission{},
 		Autoplay:                   AllowNonePermission{},
 		Bluetooth:                  AllowNonePermission{},
-		BrowsingTopics:             AllowNonePermission{},
 		Camera:                     AllowNonePermission{},
 		CapturedSurfaceControl:     AllowNonePermission{},
 		ComputePressure:            AllowNonePermission{},
@@ -51,6 +49,8 @@ var (
 		WebShare:                   AllowNonePermission{},
 		WindowManagement:           AllowNonePermission{},
 		XrSpatialTracking:          AllowNonePermission{},
+		// AttributionReporting:       AllowNonePermission{}, // deprecated per https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy#browser_compatibility
+		// BrowsingTopics:             AllowNonePermission{}, // deprecated per https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy#browser_compatibility
 	}
 )
 
