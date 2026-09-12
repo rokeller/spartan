@@ -38,7 +38,7 @@ func Test_withSecurityMiddleware(t *testing.T) {
 		{
 			name: "Csp/ReportOnly",
 			config: SecurityConfig{
-				ContentTypeOptionsNoSniff: toPtr(false),
+				ContentTypeOptionsNoSniff: new(false),
 				ContentSecurityPolicy: &ContentSecurityPolicy{
 					ReportOnly: true,
 					ImgSrc:     NoneDirectiveValue{},
@@ -52,7 +52,7 @@ func Test_withSecurityMiddleware(t *testing.T) {
 		{
 			name: "Csp/WithNonce",
 			config: SecurityConfig{
-				ContentTypeOptionsNoSniff: toPtr(false),
+				ContentTypeOptionsNoSniff: new(false),
 				ContentSecurityPolicy: &ContentSecurityPolicy{
 					DefaultSrc: NonceValue{Placeholder: "ok"},
 				},

@@ -55,7 +55,7 @@ func TestSourceExpressionList_Value(t *testing.T) {
 		{
 			name: "MultipleValues",
 			l: SourceExpressionList{
-				HostSourceDirectiveValue{Host: "unit.test.com", Scheme: toPtr("https")},
+				HostSourceDirectiveValue{Host: "unit.test.com", Scheme: new("https")},
 				SchemeSourceDirectiveValue("wss"),
 			},
 			want: "https://unit.test.com wss:",

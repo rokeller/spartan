@@ -28,22 +28,22 @@ func Test_withCachingMiddleware(t *testing.T) {
 		},
 		{
 			name:   "Config/DefaultPolicy/With-max-age",
-			config: Cache{DefaultPolicy: &CachePolicy{MaxAge: toPtr(1 * time.Hour)}},
+			config: Cache{DefaultPolicy: &CachePolicy{MaxAge: new(1 * time.Hour)}},
 			want:   "max-age=3600",
 		},
 		{
 			name:   "Config/DefaultPolicy/With-s-maxage",
-			config: Cache{DefaultPolicy: &CachePolicy{SharedMaxAge: toPtr(2 * time.Hour)}},
+			config: Cache{DefaultPolicy: &CachePolicy{SharedMaxAge: new(2 * time.Hour)}},
 			want:   "s-maxage=7200",
 		},
 		{
 			name:   "Config/DefaultPolicy/With-stale-if-error",
-			config: Cache{DefaultPolicy: &CachePolicy{StaleIfError: toPtr(10 * time.Minute)}},
+			config: Cache{DefaultPolicy: &CachePolicy{StaleIfError: new(10 * time.Minute)}},
 			want:   "stale-if-error=600",
 		},
 		{
 			name:   "Config/DefaultPolicy/With-stale-while-revalidate",
-			config: Cache{DefaultPolicy: &CachePolicy{StaleWhileRevalidate: toPtr(20 * time.Minute)}},
+			config: Cache{DefaultPolicy: &CachePolicy{StaleWhileRevalidate: new(20 * time.Minute)}},
 			want:   "stale-while-revalidate=1200",
 		},
 		{
@@ -111,7 +111,7 @@ func Test_withCachingMiddleware(t *testing.T) {
 			config: Cache{Routes: []RouteMatchingCachePolicy{
 				{
 					Match:  PathPrefixMatcher{PathPrefix: "/cach"},
-					Policy: CachePolicy{Public: true, MaxAge: toPtr(10 * time.Second)},
+					Policy: CachePolicy{Public: true, MaxAge: new(10 * time.Second)},
 				},
 			}},
 			want: "max-age=10, public",
@@ -121,7 +121,7 @@ func Test_withCachingMiddleware(t *testing.T) {
 			config: Cache{Routes: []RouteMatchingCachePolicy{
 				{
 					Match:  PathPrefixMatcher{PathPrefix: "/cach"},
-					Policy: CachePolicy{Public: true, MaxAge: toPtr(10 * time.Second)},
+					Policy: CachePolicy{Public: true, MaxAge: new(10 * time.Second)},
 				},
 			}},
 			want: "max-age=10, public",
@@ -131,15 +131,15 @@ func Test_withCachingMiddleware(t *testing.T) {
 			config: Cache{Routes: []RouteMatchingCachePolicy{
 				{
 					Match:  PathPrefixMatcher{PathPrefix: "/cach"},
-					Policy: CachePolicy{Public: true, MaxAge: toPtr(10 * time.Second)},
+					Policy: CachePolicy{Public: true, MaxAge: new(10 * time.Second)},
 				},
 				{
 					Match:  PathPrefixMatcher{PathPrefix: "/cachable"},
-					Policy: CachePolicy{Public: true, MaxAge: toPtr(20 * time.Second)},
+					Policy: CachePolicy{Public: true, MaxAge: new(20 * time.Second)},
 				},
 				{
 					Match:  PathPrefixMatcher{PathPrefix: "/cachable-res"},
-					Policy: CachePolicy{Public: true, MaxAge: toPtr(30 * time.Second)},
+					Policy: CachePolicy{Public: true, MaxAge: new(30 * time.Second)},
 				},
 			}},
 			want: "max-age=30, public",
