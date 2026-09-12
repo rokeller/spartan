@@ -1,5 +1,7 @@
 # Spartan
 
+![Spartan](logo.webp)
+
 > A simple and secure web server for SPA (single page application) or similar
 > apps with static assets.
 
@@ -431,10 +433,8 @@ permissionsPolicy:
   accelerometer: permissions
   ambientLightSensor: permissions
   ariaNotify: permissions
-  attributionReporting: permissions
   autoplay: permissions
   bluetooth: permissions
-  browsingTopics: permissions
   camera: permissions
   capturedSurfaceControl: permissions
   computePressure: permissions

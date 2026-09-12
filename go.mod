@@ -1,6 +1,6 @@
 module github.com/rokeller/spartan
 
-go 1.25.3
+go 1.26.0
 
 require (
 	github.com/go-viper/mapstructure/v2 v2.5.0
@@ -20,6 +20,6 @@ require (
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
 )
