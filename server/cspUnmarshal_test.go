@@ -82,7 +82,7 @@ ContentSecurityPolicy:
 	}
 	if !reflect.DeepEqual(csp.ScriptSrc, MultiFetchDirectiveValue{
 		NonceValue{Placeholder: "CSP_NONCE_PLACEHOLDER"},
-		HostSourceDirectiveValue{Host: "test.com", Scheme: toPtr("https")},
+		HostSourceDirectiveValue{Host: "test.com", Scheme: new("https")},
 	}) {
 		t.Errorf("CSP ScriptSrc: got = %v (%T), want multiple", csp.ScriptSrc, csp.ScriptSrc)
 	}
@@ -646,7 +646,7 @@ func TestMapToFetchDirectiveValueHookFunc(t *testing.T) {
 		{
 			name: "Host/Valid/Map",
 			from: map[string]any{"host": map[string]any{"host": "foo.com", "scheme": "https"}},
-			want: HostSourceDirectiveValue{Host: "foo.com", Scheme: toPtr("https")},
+			want: HostSourceDirectiveValue{Host: "foo.com", Scheme: new("https")},
 		},
 		{
 			name:    "Host/Invalid/Integer",
@@ -732,7 +732,7 @@ func TestMapToSourceExpressionListItemHookFunc(t *testing.T) {
 		{
 			name: "Host/Valid/Map",
 			from: map[string]any{"host": map[string]any{"host": "foo.com", "scheme": "https"}},
-			want: HostSourceDirectiveValue{Host: "foo.com", Scheme: toPtr("https")},
+			want: HostSourceDirectiveValue{Host: "foo.com", Scheme: new("https")},
 		},
 		{
 			name:    "Host/Invalid/Integer",

@@ -6,6 +6,66 @@ import (
 	"time"
 )
 
+func TestServerConfig_GetNotFoundBehavior(t *testing.T) {
+	nfb := &NotFoundBehavior{
+		FallbackToIndex: new(false),
+		StatusCode:      new(404),
+		BodyPath:        new("path/to/404.html"),
+		ContentType:     new("text/html"),
+	}
+	tests := []struct {
+		name     string // description of this test case
+		fbti     *bool
+		behavior *NotFoundBehavior
+		want     *NotFoundBehavior
+	}{
+		{
+			name: "NullBehavior/Null fallbackToIndex results in default not-found behavior returned",
+			want: &DefaultNotFoundBehavior,
+		},
+		{
+			name: "NullBehavior/fallbackToIndex=true results in default not-found behavior returned",
+			fbti: new(true),
+			want: &DefaultNotFoundBehavior,
+		},
+		{
+			name: "NullBehavior/fallbackToIndex=false results in default not-found behavior returned",
+			fbti: new(false),
+			want: &NotFoundBehavior{
+				FallbackToIndex: new(false),
+			},
+		},
+		{
+			name:     "DefinedBehavior/Results in defined behavior",
+			behavior: nfb,
+			want:     nfb,
+		},
+		{
+			name:     "DefinedBehavior/fallbackToIndex=true Results in defined behavior",
+			fbti:     new(true),
+			behavior: nfb,
+			want:     nfb,
+		},
+		{
+			name:     "DefinedBehavior/fallbackToIndex=false Results in defined behavior",
+			fbti:     new(false),
+			behavior: nfb,
+			want:     nfb,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &ServerConfig{
+				FallbackToIndex:  tt.fbti,
+				NotFoundBehavior: tt.behavior,
+			}
+			if got := c.GetNotFoundBehavior(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ServerConfig.GetNotFoundBehavior() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestSecurityConfig_GetContentSecurityPolicy(t *testing.T) {
 	csp := &ContentSecurityPolicy{
 		DefaultSrc: NonceValue{Placeholder: "foo"},

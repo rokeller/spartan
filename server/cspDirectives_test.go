@@ -227,27 +227,27 @@ func TestHostSourceDirectiveValue_Value(t *testing.T) {
 		},
 		{
 			name:  "SchemeAndHost",
-			input: HostSourceDirectiveValue{Host: "ftp.foo.bar", Scheme: toPtr("ftps")},
+			input: HostSourceDirectiveValue{Host: "ftp.foo.bar", Scheme: new("ftps")},
 			want:  "ftps://ftp.foo.bar",
 		},
 		{
 			name:  "SchemeWithColonAndHost",
-			input: HostSourceDirectiveValue{Host: "ftp.foo.bar", Scheme: toPtr("ftps:")},
+			input: HostSourceDirectiveValue{Host: "ftp.foo.bar", Scheme: new("ftps:")},
 			want:  "ftps://ftp.foo.bar",
 		},
 		{
 			name:  "HostAndPort",
-			input: HostSourceDirectiveValue{Host: "localhost", Port: toPtr(uint16(8080))},
+			input: HostSourceDirectiveValue{Host: "localhost", Port: new(uint16(8080))},
 			want:  "localhost:8080",
 		},
 		{
 			name:  "HostAndPath",
-			input: HostSourceDirectiveValue{Host: "localhost", Path: toPtr("a/b/c")},
+			input: HostSourceDirectiveValue{Host: "localhost", Path: new("a/b/c")},
 			want:  "localhost/a/b/c",
 		},
 		{
 			name:  "HostAndPathWithLeadingSlash",
-			input: HostSourceDirectiveValue{Host: "localhost", Path: toPtr("/a/b/c/")},
+			input: HostSourceDirectiveValue{Host: "localhost", Path: new("/a/b/c/")},
 			want:  "localhost/a/b/c/",
 		},
 	}

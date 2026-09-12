@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path"
 	"runtime"
 	"strings"
 	"sync"
@@ -18,8 +17,7 @@ import (
 type server struct {
 	config ServerConfig
 
-	fs      http.FileSystem
-	handler http.Handler
+	fs http.FileSystem
 }
 
 func Serve(
@@ -63,15 +61,18 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 	}
 
 	s.fs = http.Dir(s.config.StaticContentDir)
-	s.handler = http.FileServer(s.fs)
-
-	h := http.HandlerFunc(s.handleStaticFiles)
+	handler := http.FileServer(s.fs)
 	p := fmt.Sprintf("GET %s", s.config.PathRoot)
 	mux.Handle(p,
 		withLoggingMiddleware(
 			http.StripPrefix(s.config.PathRoot,
 				withSecurityMiddleware(s.config.Security,
-					withCachingMiddleware(s.config.Cache, h),
+					withCachingMiddleware(s.config.Cache,
+						withNotFoundMiddleware(
+							s.config,
+							handler,
+						),
+					),
 				),
 			),
 		),
@@ -101,34 +102,6 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 	}()
 
 	return srv, nil
-}
-
-func (s *server) handleStaticFiles(w http.ResponseWriter, r *http.Request) {
-	if nil == s.config.FallbackToIndex || *s.config.FallbackToIndex {
-		upath := path.Clean(r.URL.Path)
-		if upath == "." {
-			upath = "/"
-		} else if !strings.HasPrefix(upath, "/") {
-			upath = "/" + upath
-		}
-		r.URL.Path = upath
-		klog.V(5).InfoS("Client requested", "path", upath)
-
-		// Fallback to the index.html file.
-		f, err := s.fs.Open(upath)
-		if nil != err {
-			klog.V(4).ErrorS(err, "Failed")
-			klog.V(5).Info("Serving index.html from staticContentDir instead", "staticContentDir", s.config.StaticContentDir)
-			r.URL.Path = "/"
-			// Recurse so we can leverage the same logic as for all other files.
-			s.handleStaticFiles(w, r)
-			return
-		}
-		defer f.Close()
-	}
-
-	// Let the configured handler serve the request.
-	s.handler.ServeHTTP(w, r)
 }
 
 func (s *server) addHealthEndpoints(mux *http.ServeMux) {

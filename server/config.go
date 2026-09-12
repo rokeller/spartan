@@ -1,6 +1,8 @@
 package server
 
-import "time"
+import (
+	"time"
+)
 
 type Config struct {
 	Server ServerConfig
@@ -10,10 +12,31 @@ type ServerConfig struct {
 	Port             uint16
 	StaticContentDir string
 	PathRoot         string
+
+	// FallbackToIndex indicates whether spartan should respond with the
+	// index.html of the configured root directory ([ServerConfig.StaticContentDir])
+	// when a resource is not found. Defaults to true when set to nil.
+	//
+	// Deprecated: Use the settings from the [ServerConfig.NotFoundBehavior]
+	// instead as it gives more control over the behavior when a requested
+	// resource is not found.
 	FallbackToIndex  *bool
+	NotFoundBehavior *NotFoundBehavior
 
 	Cache    Cache
 	Security SecurityConfig
+}
+
+func (c *ServerConfig) GetNotFoundBehavior() *NotFoundBehavior {
+	if c.FallbackToIndex == nil && c.NotFoundBehavior == nil {
+		return &DefaultNotFoundBehavior
+	} else if c.NotFoundBehavior != nil {
+		return c.NotFoundBehavior
+	} else {
+		return &NotFoundBehavior{
+			FallbackToIndex: c.FallbackToIndex,
+		}
+	}
 }
 
 type Cache struct {
