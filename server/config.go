@@ -12,6 +12,7 @@ type ServerConfig struct {
 	Port             uint16
 	StaticContentDir string
 	PathRoot         string
+	TLSConfig        *TLSConfig
 
 	// FallbackToIndex indicates whether spartan should respond with the
 	// index.html of the configured root directory ([ServerConfig.StaticContentDir])
