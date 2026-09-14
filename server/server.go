@@ -153,7 +153,7 @@ func (s *server) healthEndpointRuntime(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) getTLSConfig() *tls.Config {
-	if s.config.TLSConfig == nil || s.config.TLSConfig.Empty() {
+	if s.config.TLSConfig.Empty() {
 		return nil
 	}
 	return &tls.Config{
