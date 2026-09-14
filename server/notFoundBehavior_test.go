@@ -3,13 +3,11 @@ package server
 import (
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path"
-	"path/filepath"
 	"reflect"
-	"runtime"
 	"slices"
 	"testing"
+
+	"github.com/rokeller/spartan/internal/test"
 )
 
 func TestNotFoundBehavior_getStatusCode(t *testing.T) {
@@ -65,28 +63,6 @@ func TestNotFoundBehavior_getStatusCode(t *testing.T) {
 }
 
 func TestNotFoundBehavior_getResponseBody(t *testing.T) {
-	repoRootDir := func() string {
-		_, filename, _, ok := runtime.Caller(0)
-		if !ok {
-			panic("failed to get caller information")
-		}
-		dirname := path.Join(filepath.Dir(filename), "..")
-		rootPath, err := filepath.Abs(dirname)
-		if nil != err {
-			panic(err)
-		}
-		return rootPath
-	}()
-
-	getRepoFileContent := func(elem ...string) []byte {
-		p := path.Join(append([]string{repoRootDir}, elem...)...)
-		data, err := os.ReadFile(p)
-		if nil != err {
-			t.Fatalf("failed to read repo file %q: %v", p, err)
-		}
-		return data
-	}
-
 	tests := []struct {
 		name string // description of this test case
 		c    ServerConfig
@@ -95,36 +71,36 @@ func TestNotFoundBehavior_getResponseBody(t *testing.T) {
 		{
 			name: "Defaults",
 			c: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 			},
-			want: getRepoFileContent("example/content/index.html"),
+			want: test.RepoFileContent(t, "example/content/index.html"),
 		},
 		{
 			name: "FallbackToIndex=nil/BodyPath ignored",
 			c: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: nil,
 					BodyPath:        new("path/is/irrelevant"),
 				},
 			},
-			want: getRepoFileContent("example/content/index.html"),
+			want: test.RepoFileContent(t, "example/content/index.html"),
 		},
 		{
 			name: "FallbackToIndex=true/BodyPath ignored",
 			c: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: new(true),
 					BodyPath:        new("path/is/irrelevant"),
 				},
 			},
-			want: getRepoFileContent("example/content/index.html"),
+			want: test.RepoFileContent(t, "example/content/index.html"),
 		},
 		{
 			name: "FallbackToIndex=false/BodyPath=nil",
 			c: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: new(false),
 				},
@@ -134,7 +110,7 @@ func TestNotFoundBehavior_getResponseBody(t *testing.T) {
 		{
 			name: "FallbackToIndex=false/BodyPath does not exist",
 			c: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: new(false),
 					BodyPath:        new("/tmp/file/does/not/exist"),
@@ -145,13 +121,13 @@ func TestNotFoundBehavior_getResponseBody(t *testing.T) {
 		{
 			name: "FallbackToIndex=false/BodyPath set",
 			c: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: new(false),
-					BodyPath:        new(path.Join(repoRootDir, "example/content/static/styles.css")),
+					BodyPath:        new(test.RepoRelPath(t, "example/content/static/styles.css")),
 				},
 			},
-			want: getRepoFileContent("example/content/static/styles.css"),
+			want: test.RepoFileContent(t, "example/content/static/styles.css"),
 		},
 	}
 	for _, tt := range tests {
@@ -217,28 +193,6 @@ func TestNotFoundBehavior_getContentType(t *testing.T) {
 }
 
 func TestNotFoundBehavior_Middleware(t *testing.T) {
-	repoRootDir := func() string {
-		_, filename, _, ok := runtime.Caller(0)
-		if !ok {
-			panic("failed to get caller information")
-		}
-		dirname := path.Join(filepath.Dir(filename), "..")
-		rootPath, err := filepath.Abs(dirname)
-		if nil != err {
-			panic(err)
-		}
-		return rootPath
-	}()
-
-	getRepoFileContent := func(elem ...string) string {
-		p := path.Join(append([]string{repoRootDir}, elem...)...)
-		data, err := os.ReadFile(p)
-		if nil != err {
-			t.Fatalf("failed to read repo file %q: %v", p, err)
-		}
-		return string(data)
-	}
-
 	tests := []struct {
 		name            string
 		url             string
@@ -251,102 +205,102 @@ func TestNotFoundBehavior_Middleware(t *testing.T) {
 			name: "FallbackToIndex=nil/Request root",
 			url:  "/",
 			config: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 			},
 			wantStatus:      200,
 			wantContentType: "text/html; charset=utf-8",
-			wantBody:        getRepoFileContent("example/content/index.html"),
+			wantBody:        test.RepoFileContentString(t, "example/content/index.html"),
 		},
 		{
 			name: "FallbackToIndex=nil/Request styles.css",
 			url:  "/static/styles.css",
 			config: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 			},
 			wantStatus:      200,
 			wantContentType: "text/css; charset=utf-8",
-			wantBody:        getRepoFileContent("example/content/static/styles.css"),
+			wantBody:        test.RepoFileContentString(t, "example/content/static/styles.css"),
 		},
 		{
 			name: "FallbackToIndex=nil/Request missing resource",
 			url:  "/foo.css",
 			config: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 			},
 			wantStatus:      200,
 			wantContentType: "text/html; charset=utf-8",
-			wantBody:        getRepoFileContent("example/content/index.html"),
+			wantBody:        test.RepoFileContentString(t, "example/content/index.html"),
 		},
 		{
 			name: "FallbackToIndex=true/Request root",
 			url:  "/",
 			config: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: new(true),
 				},
 			},
 			wantStatus:      200,
 			wantContentType: "text/html; charset=utf-8",
-			wantBody:        getRepoFileContent("example/content/index.html"),
+			wantBody:        test.RepoFileContentString(t, "example/content/index.html"),
 		},
 		{
 			name: "FallbackToIndex=true/Request styles.css",
 			url:  "/static/styles.css",
 			config: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: new(true),
 				},
 			},
 			wantStatus:      200,
 			wantContentType: "text/css; charset=utf-8",
-			wantBody:        getRepoFileContent("example/content/static/styles.css"),
+			wantBody:        test.RepoFileContentString(t, "example/content/static/styles.css"),
 		},
 		{
 			name: "FallbackToIndex=true/Request missing resource",
 			url:  "/foo.css",
 			config: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: new(true),
 				},
 			},
 			wantStatus:      200,
 			wantContentType: "text/html; charset=utf-8",
-			wantBody:        getRepoFileContent("example/content/index.html"),
+			wantBody:        test.RepoFileContentString(t, "example/content/index.html"),
 		},
 		{
 			name: "FallbackToIndex=false/Request root",
 			url:  "/",
 			config: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: new(false),
 				},
 			},
 			wantStatus:      200,
 			wantContentType: "text/html; charset=utf-8",
-			wantBody:        getRepoFileContent("example/content/index.html"),
+			wantBody:        test.RepoFileContentString(t, "example/content/index.html"),
 		},
 		{
 			name: "FallbackToIndex=false/Request styles.css",
 			url:  "/static/styles.css",
 			config: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: new(false),
 				},
 			},
 			wantStatus:      200,
 			wantContentType: "text/css; charset=utf-8",
-			wantBody:        getRepoFileContent("example/content/static/styles.css"),
+			wantBody:        test.RepoFileContentString(t, "example/content/static/styles.css"),
 		},
 		{
 			name: "FallbackToIndex=false/Request missing resource",
 			url:  "/foo.css",
 			config: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: new(false),
 				},
@@ -359,16 +313,16 @@ func TestNotFoundBehavior_Middleware(t *testing.T) {
 			name: "FallbackToIndex=false/BodyPath set/ContentType set/Request missing resource",
 			url:  "/foo",
 			config: ServerConfig{
-				StaticContentDir: path.Join(repoRootDir, "example/content"),
+				StaticContentDir: test.RepoRelPath(t, "example/content"),
 				NotFoundBehavior: &NotFoundBehavior{
 					FallbackToIndex: new(false),
-					BodyPath:        new(path.Join(repoRootDir, "example/content/static/styles.css")),
+					BodyPath:        new(test.RepoRelPath(t, "example/content/static/styles.css")),
 					ContentType:     new("text/css; charset-utf-8"),
 				},
 			},
 			wantStatus:      404,
 			wantContentType: "text/css; charset-utf-8",
-			wantBody:        getRepoFileContent("example/content/static/styles.css"),
+			wantBody:        test.RepoFileContentString(t, "example/content/static/styles.css"),
 		},
 	}
 	for _, tt := range tests {

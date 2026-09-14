@@ -2,11 +2,15 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/rokeller/spartan/internal/test"
 )
 
 func TestServe(t *testing.T) {
@@ -35,8 +39,6 @@ func TestServe(t *testing.T) {
 func Test_server_startHttpServer(t *testing.T) {
 	type fields struct {
 		config ServerConfig
-		// fs      http.FileSystem
-		// handler http.Handler
 	}
 	type args struct {
 		wg *sync.WaitGroup
@@ -48,7 +50,7 @@ func Test_server_startHttpServer(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "Serve at root",
+			name: "HTTP/Serve at root",
 			fields: fields{
 				config: ServerConfig{Port: 9091, PathRoot: ""},
 			},
@@ -56,7 +58,7 @@ func Test_server_startHttpServer(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Serve at path with single segment",
+			name: "HTTP/Serve at path with single segment",
 			fields: fields{
 				config: ServerConfig{Port: 9092, PathRoot: "/simple-path"},
 			},
@@ -64,9 +66,22 @@ func Test_server_startHttpServer(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Serve at path with multiple segments",
+			name: "HTTP/Serve at path with multiple segments",
 			fields: fields{
 				config: ServerConfig{Port: 9093, PathRoot: "/path/a/b/c/"},
+			},
+			wantUrl: "/path/a/b/c/",
+			wantErr: false,
+		},
+		{
+			name: "HTTPS/Serve at path with multiple segments",
+			fields: fields{
+				config: ServerConfig{Port: 9491, PathRoot: "/path/a/b/c/",
+					TLSConfig: &TLSConfig{
+						CertPath: test.RepoRelPath(t, "example/tls/cert.pem"),
+						KeyPath:  test.RepoRelPath(t, "example/tls/key.pem"),
+					},
+				},
 			},
 			wantUrl: "/path/a/b/c/",
 			wantErr: false,
@@ -133,6 +148,45 @@ func Test_server_addHealthEndpoints(t *testing.T) {
 			mux.ServeHTTP(w, req)
 			if w.Result().StatusCode != tt.wantStatus {
 				t.Errorf("server responded with status %d, want %d", w.Result().StatusCode, tt.wantStatus)
+			}
+		})
+	}
+}
+
+func Test_server_getTLSConfig(t *testing.T) {
+	tests := []struct {
+		name string // description of this test case
+		c    ServerConfig
+		want *tls.Config
+	}{
+		{
+			name: "Empty Config",
+			c: ServerConfig{
+				TLSConfig: nil,
+			},
+			want: nil,
+		},
+		{
+			name: "Config/WithPaths",
+			c: ServerConfig{
+				TLSConfig: &TLSConfig{
+					CertPath: "tls.crt",
+					KeyPath:  "tls.key",
+				},
+			},
+			want: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := server{
+				config: tt.c,
+			}
+			got := s.getTLSConfig()
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getTLSConfig() = %v, want %v", got, tt.want)
 			}
 		})
 	}

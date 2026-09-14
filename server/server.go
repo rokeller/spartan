@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -83,6 +84,8 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 		Addr:    fmt.Sprintf(":%d", s.config.Port),
 		Handler: mux,
 
+		TLSConfig: s.getTLSConfig(),
+
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 	}
@@ -95,7 +98,16 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 			"port", s.config.Port,
 			"staticContentDir", s.config.StaticContentDir,
 			"serverPathRoot", s.config.PathRoot)
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+
+		var listenAndServer func() error
+		if s.config.TLSConfig.Empty() {
+			listenAndServer = srv.ListenAndServe
+		} else {
+			listenAndServer = func() error {
+				return srv.ListenAndServeTLS(s.config.TLSConfig.CertPath, s.config.TLSConfig.KeyPath)
+			}
+		}
+		if err := listenAndServer(); err != http.ErrServerClosed {
 			klog.ErrorS(err, "Failed to start web server", "port", s.config.Port)
 			os.Exit(2)
 		}
@@ -138,4 +150,13 @@ func (s *server) healthEndpointRuntime(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("content-type", "application/json")
 	json.NewEncoder(w).Encode(stats)
+}
+
+func (s *server) getTLSConfig() *tls.Config {
+	if s.config.TLSConfig.Empty() {
+		return nil
+	}
+	return &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
 }

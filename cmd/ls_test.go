@@ -5,28 +5,14 @@ package cmd
 import (
 	"bytes"
 	"context"
-	"path"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
+	"github.com/rokeller/spartan/internal/test"
 	"github.com/spf13/cobra"
 )
 
 func Test_runLs(t *testing.T) {
-	repoRootDir := func() string {
-		_, filename, _, ok := runtime.Caller(0)
-		if !ok {
-			panic("failed to get caller information")
-		}
-		dirname := path.Join(filepath.Dir(filename), "..")
-		rootPath, err := filepath.Abs(dirname)
-		if nil != err {
-			panic(err)
-		}
-		return rootPath
-	}()
 	tests := []struct {
 		name       string // description of this test case
 		prepare    func(t *testing.T, cmd *cobra.Command)
@@ -43,7 +29,7 @@ func Test_runLs(t *testing.T) {
 		{
 			name: "EmptyDir",
 			prepare: func(t *testing.T, cmd *cobra.Command) {
-				dir := path.Join(repoRootDir, "example/content")
+				dir := test.RepoRelPath(t, "example/content")
 				vpr.Set("server.staticcontentdir", dir)
 			},
 			wantStdOut: strings.ReplaceAll(
@@ -52,7 +38,7 @@ func Test_runLs(t *testing.T) {
 					"$ROOT/example/content/static\n"+
 					"$ROOT/example/content/static/spartan.webp\n"+
 					"$ROOT/example/content/static/styles.css\n",
-				"$ROOT", repoRootDir),
+				"$ROOT", test.RepoRootDir),
 		},
 	}
 	for _, tt := range tests {
