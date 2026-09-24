@@ -5,9 +5,11 @@ COPY go.* ./
 RUN go mod download
 
 COPY . .
+ARG VERSION=""
 ARG SPARTAN_TAGS=""
 # Create an optimized statically linked binary so we can create an image from scratch below.
-RUN CGO_ENABLED=0 go build -tags "$SPARTAN_TAGS" -ldflags '-s -w'
+RUN CGO_ENABLED=0 go build -tags "$SPARTAN_TAGS" \
+    -ldflags "-s -w -X github.com/rokeller/spartan/cmd.version=$VERSION"
 
 FROM scratch
 

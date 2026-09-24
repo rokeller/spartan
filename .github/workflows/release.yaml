@@ -52,6 +52,8 @@ jobs:
 
       - uses: docker/build-push-action@v7
         with:
+          build-args: |
+            VERSION=${{ github.ref_name }}
           context: .
           push: true
           tags: |
@@ -65,6 +67,7 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           build-args: |
+            VERSION=${{ github.ref_name }}
             SPARTAN_TAGS=minimal
           context: .
           push: true
