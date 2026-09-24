@@ -155,6 +155,12 @@ server:
     contentType: text/html; charset=utf-8 # The content type header to set for
                                           # responses on resources that are not
                                           # found.
+  tlsConfig: # Use this only when spartan needs to serve HTTPS traffic directly,
+             # for example when there is no gateway for TLS termination.
+    certPath: path/to/certificate.pem # Path to the certificate to identify the
+                                      # web server.
+    keyPath: path/to/private-key.pem  # Path to the private key that belongs to
+                                      # the certificate.
 
   cache:
     defaultPolicy:
