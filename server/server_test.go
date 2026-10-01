@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"net/http"
@@ -105,6 +106,212 @@ func Test_server_startHttpServer(t *testing.T) {
 			got.Handler.ServeHTTP(w, req)
 			if w.Result().StatusCode != 200 {
 				t.Errorf("server responded with status %d, want 200", w.Result().StatusCode)
+			}
+
+			if err := got.Shutdown(t.Context()); nil != err {
+				t.Errorf("server.Shutdown failed: %v", err)
+			}
+			wg.Wait()
+		})
+	}
+}
+
+func Test_server_Serve(t *testing.T) {
+	type fields struct {
+		config ServerConfig
+	}
+	type args struct {
+		wg *sync.WaitGroup
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		url        string
+		wantStatus int
+		wantBody   []byte
+	}{
+		{
+			name: "Serve at root/Request directory without index.html/With FallbackToIndex",
+			fields: fields{
+				config: ServerConfig{
+					Port:             9100,
+					PathRoot:         "",
+					StaticContentDir: test.RepoRelPath(t, "example/content"),
+					NotFoundBehavior: &NotFoundBehavior{
+						FallbackToIndex: new(true),
+					},
+				},
+			},
+			url:        "/static",
+			wantStatus: 200,
+			wantBody:   test.RepoFileContent(t, "example/content/index.html"),
+		},
+		{
+			name: "Serve at root/Request directory without index.html/Without FallbackToIndex",
+			fields: fields{
+				config: ServerConfig{
+					Port:             9101,
+					PathRoot:         "",
+					StaticContentDir: test.RepoRelPath(t, "example/content"),
+					NotFoundBehavior: &NotFoundBehavior{
+						FallbackToIndex: new(false),
+					},
+				},
+			},
+			url:        "/static",
+			wantStatus: 404,
+			wantBody:   []byte("404 page not found"),
+		},
+		{
+			name: "Serve at path/Request directory without index.html/With FallbackToIndex",
+			fields: fields{
+				config: ServerConfig{
+					Port:             9102,
+					PathRoot:         "/simple-path",
+					StaticContentDir: test.RepoRelPath(t, "example/content"),
+					NotFoundBehavior: &NotFoundBehavior{
+						FallbackToIndex: new(true),
+					},
+				},
+			},
+			url:        "/simple-path/static/",
+			wantStatus: 200,
+			wantBody:   test.RepoFileContent(t, "example/content/index.html"),
+		},
+		{
+			name: "Serve at path/Request directory without index.html/Without FallbackToIndex",
+			fields: fields{
+				config: ServerConfig{
+					Port:             9103,
+					PathRoot:         "/simple-path",
+					StaticContentDir: test.RepoRelPath(t, "example/content"),
+					NotFoundBehavior: &NotFoundBehavior{
+						FallbackToIndex: new(false),
+					},
+				},
+			},
+			url:        "/simple-path/static/",
+			wantStatus: 404,
+			wantBody:   []byte("404 page not found"),
+		},
+		{
+			name: "Serve at root/Request directory with index.html/With FallbackToIndex",
+			fields: fields{
+				config: ServerConfig{
+					Port:             9104,
+					PathRoot:         "",
+					StaticContentDir: test.RepoRelPath(t, "example/content"),
+					NotFoundBehavior: &NotFoundBehavior{
+						FallbackToIndex: new(true),
+					},
+				},
+			},
+			url:        "/more/",
+			wantStatus: 200,
+			wantBody:   test.RepoFileContent(t, "example/content/more/index.html"),
+		},
+		{
+			name: "Serve at root/Request directory with index.html/Without FallbackToIndex",
+			fields: fields{
+				config: ServerConfig{
+					Port:             9105,
+					PathRoot:         "",
+					StaticContentDir: test.RepoRelPath(t, "example/content"),
+					NotFoundBehavior: &NotFoundBehavior{
+						FallbackToIndex: new(false),
+					},
+				},
+			},
+			url:        "/more/",
+			wantStatus: 200,
+			wantBody:   test.RepoFileContent(t, "example/content/more/index.html"),
+		},
+		{
+			name: "Serve at path/Request directory with index.html/With FallbackToIndex",
+			fields: fields{
+				config: ServerConfig{
+					Port:             9106,
+					PathRoot:         "/simple-path",
+					StaticContentDir: test.RepoRelPath(t, "example/content"),
+					NotFoundBehavior: &NotFoundBehavior{
+						FallbackToIndex: new(true),
+					},
+				},
+			},
+			url:        "/simple-path/more/",
+			wantStatus: 200,
+			wantBody:   test.RepoFileContent(t, "example/content/more/index.html"),
+		},
+		{
+			name: "Serve at path/Request directory with index.html/Without FallbackToIndex",
+			fields: fields{
+				config: ServerConfig{
+					Port:             9107,
+					PathRoot:         "/simple-path",
+					StaticContentDir: test.RepoRelPath(t, "example/content"),
+					NotFoundBehavior: &NotFoundBehavior{
+						FallbackToIndex: new(false),
+					},
+				},
+			},
+			url:        "/simple-path/more/",
+			wantStatus: 200,
+			wantBody:   test.RepoFileContent(t, "example/content/more/index.html"),
+		},
+		{
+			name: "Serve at root/Request resource that does not exist/With FallbackToIndex",
+			fields: fields{
+				config: ServerConfig{
+					Port:             9108,
+					PathRoot:         "",
+					StaticContentDir: test.RepoRelPath(t, "example/content"),
+					NotFoundBehavior: &NotFoundBehavior{
+						FallbackToIndex: new(true),
+					},
+				},
+			},
+			url:        "/blah",
+			wantStatus: 200,
+			wantBody:   test.RepoFileContent(t, "example/content/index.html"),
+		},
+		{
+			name: "Serve at root/Request resource that does not exist/Without FallbackToIndex",
+			fields: fields{
+				config: ServerConfig{
+					Port:             9109,
+					PathRoot:         "",
+					StaticContentDir: test.RepoRelPath(t, "example/content"),
+					NotFoundBehavior: &NotFoundBehavior{
+						FallbackToIndex: new(false),
+					},
+				},
+			},
+			url:        "/blah",
+			wantStatus: 404,
+			wantBody:   []byte("404 page not found"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &server{
+				config: tt.fields.config,
+			}
+			wg := &sync.WaitGroup{}
+			wg.Add(1)
+			got, err := s.startHttpServer(wg)
+			if err != nil {
+				t.Fatalf("server.startHttpServer() failed with error %v", err)
+			}
+
+			req := httptest.NewRequest("GET", tt.url, nil)
+			w := httptest.NewRecorder()
+			got.Handler.ServeHTTP(w, req)
+			if w.Result().StatusCode != tt.wantStatus {
+				t.Errorf("server responded with status %d, want %d", w.Result().StatusCode, tt.wantStatus)
+			}
+
+			if !bytes.Equal(w.Body.Bytes(), tt.wantBody) {
+				t.Errorf("server responded with body %q, want %q", w.Body.Bytes(), tt.wantBody)
 			}
 
 			if err := got.Shutdown(t.Context()); nil != err {

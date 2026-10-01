@@ -35,6 +35,8 @@ func Test_runLs(t *testing.T) {
 			wantStdOut: strings.ReplaceAll(
 				"$ROOT/example/content\n"+
 					"$ROOT/example/content/index.html\n"+
+					"$ROOT/example/content/more\n"+
+					"$ROOT/example/content/more/index.html\n"+
 					"$ROOT/example/content/static\n"+
 					"$ROOT/example/content/static/spartan.webp\n"+
 					"$ROOT/example/content/static/styles.css\n",

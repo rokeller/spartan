@@ -61,7 +61,7 @@ func (s *server) startHttpServer(wg *sync.WaitGroup) (*http.Server, error) {
 		s.config.PathRoot = normalizedPath + "/"
 	}
 
-	s.fs = http.Dir(s.config.StaticContentDir)
+	s.fs = newServerDir(http.Dir(s.config.StaticContentDir))
 	handler := http.FileServer(s.fs)
 	p := fmt.Sprintf("GET %s", s.config.PathRoot)
 	mux.Handle(p,
