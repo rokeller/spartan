@@ -73,14 +73,28 @@ including logging for requests.
 
 #### Image flavors
 
-We publish two different flavors of the container image: _minimal_ (with _no_
-image tag suffix, i.e., the default for each version) and _tools_ (with the
-`-tools` suffix after the version). In production, you'll typically want to run
-the _minimal_ flavor, as it has the minimal footprint. The _tools_ flavor offers
-additional commands on the `spartan` executable that can be helpful to inspect
-content served by `spartan` or headers added to responses. Those commands are
-discussed in the sections below. You can also find out more by running for
-example:
+We publish different tags of the container image:
+
+* _minimal_ (with _no_ flavor image tag suffix, i.e., the default for each
+  version and base image)
+* _tools_ (with the `-tools` suffix after the version)
+* _scratch_ as base image (with _no_ base image tag suffix, i.e., the default
+  for each version and flavor)
+* _distroless_ ([gcr.io/distroless/static-debian13:nonroot](https://github.com/GoogleContainerTools/distroless)) as base image (with
+  the `-distroless` suffix after the version/flavor)
+
+All images are using non-root users by default. The _scratch_-based images are
+the smallest ones (only containing a single binary), whereas _distroless_ images
+do have additional basic infrastructure (like a home directory, a `passwd` file,
+ca-certificates, time zone info, and such). This can be particularly usefule if
+for some reason you're planning to run additional processes from your customized
+`spartan`-based image.
+
+In production, you'll typically want to run one of the _minimal_ flavors, as it
+has the minimal footprint. The _tools_ flavor offers additional commands on the
+`spartan` executable that can be helpful to inspect content served by `spartan`
+or headers added to responses. Those commands are discussed in the sections
+below. You can also find out more by running for example:
 
 ```bash
 docker container run --rm -it ghcr.io/rokeller/spartan:0-tools -h
