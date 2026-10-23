@@ -28,8 +28,12 @@ jobs:
       - name: Test Server
         run: go test ./...
 
-  container-image:
+  container-images:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go_tags: ["minimal", "tools"]
+        base_image: ["scratch", "distroless"]
     needs: build-test
     permissions:
       packages: write
@@ -39,8 +43,30 @@ jobs:
       - name: Determine image tags
         run: |
           echo "ref name: $GITHUB_REF_NAME"
-          bash extract-tags.sh "$GITHUB_REF_NAME"
-          bash extract-tags.sh "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+          bash extract-tags.sh "$GITHUB_REF_NAME" | tee --append "$GITHUB_ENV"
+
+          echo 'go tags   : ${{ matrix.go_tags }}'
+          echo 'base image: ${{ matrix.base_image }}'
+          case '${{ matrix.go_tags }}-${{ matrix.base_image }}' in
+            minimal-scratch)
+              TAG_SUFFIX=''
+              DESC_SUFFIX=' (minimal)'
+              ;;
+            minimal-*)
+              TAG_SUFFIX='-${{ matrix.base_image }}'
+              DESC_SUFFIX=' (minimal)'
+              ;;
+            *-scratch)
+              TAG_SUFFIX='-${{ matrix.go_tags }}'
+              DESC_SUFFIX=' with ${{ matrix.go_tags }}'
+              ;;
+            *)
+              TAG_SUFFIX='-${{ matrix.go_tags }}-${{ matrix.base_image }}'
+              DESC_SUFFIX=' with ${{ matrix.go_tags }}'
+              ;;
+          esac
+          echo "TAG_SUFFIX=$TAG_SUFFIX" | tee --append "$GITHUB_ENV"
+          echo "DESC_SUFFIX=$DESC_SUFFIX" | tee --append "$GITHUB_ENV"
 
       - uses: docker/login-action@v4
         with:
@@ -54,27 +80,14 @@ jobs:
         with:
           build-args: |
             VERSION=${{ github.ref_name }}
+            SPARTAN_TAGS=${{ matrix.go_tags }}
           context: .
+          file: Dockerfile.${{ matrix.base_image }}
           push: true
           tags: |
-            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR }}-tools
-            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR }}-tools
-            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR_PATCH }}-tools
+            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR }}${{ env.TAG_SUFFIX }}
+            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR }}${{ env.TAG_SUFFIX }}
+            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR_PATCH }}${{ env.TAG_SUFFIX }}
           labels: |
             org.opencontainers.image.version=${{ github.ref_name }}
-            org.opencontainers.image.description=spartan web server with tools
-
-      - uses: docker/build-push-action@v7
-        with:
-          build-args: |
-            VERSION=${{ github.ref_name }}
-            SPARTAN_TAGS=minimal
-          context: .
-          push: true
-          tags: |
-            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR }}
-            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR }}
-            ${{ env.IMAGE_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.VER_MAJOR_MINOR_PATCH }}
-          labels: |
-            org.opencontainers.image.version=${{ github.ref_name }}
-            org.opencontainers.image.description=spartan web server (minimal)
+            org.opencontainers.image.description=spartan web server${{ env.DESC_SUFFIX }}

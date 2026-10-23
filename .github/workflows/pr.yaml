@@ -28,14 +28,34 @@ jobs:
       - name: Test Server
         run: go test ./...
 
-  build-image:
+  build-images:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go_tags: ["minimal", "tools"]
+        base_image: ["scratch", "distroless"]
     steps:
       - uses: actions/checkout@v7
       - name: Build container image
         run: |
-          echo 'Building minimal image ...'
-          docker image build --build-arg SPARTAN_TAGS=minimal -t spartan .
+          case "${{ matrix.go_tags }}-${{ matrix.base_image }}" in
+            minimal-scratch)
+              TAG='latest'
+              ;;
+            minimal-*)
+              TAG='${{ matrix.base_image }}'
+              ;;
+            *-scratch)
+              TAG='${{ matrix.go_tags }}'
+              ;;
+            *)
+              TAG='${{ matrix.go_tags }}-${{ matrix.base_image }}'
+              ;;
+          esac
 
-          echo 'Building image with all ...'
-          docker image build -t spartan:tools .
+          echo "Building image tag '$TAG' ..."
+          docker image build \
+            --build-arg SPARTAN_TAGS=${{ matrix.go_tags }} \
+            -t spartan:$TAG \
+            -f Dockerfile.${{ matrix.base_image }} \
+            .
